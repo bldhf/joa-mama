@@ -5,7 +5,7 @@ import com.google.gson.*;
 
 import java.lang.reflect.Type;
 
-public class JoaGson {
+public class TraitsGson {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Table.class, new TableSerializer())
             .disableHtmlEscaping()

@@ -7,27 +7,27 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class JoaState {
+public class SimpleState {
     private final Map<Property<?>, Comparable<?>> entries;
 
-    public JoaState () {
+    public SimpleState () {
         this.entries = new HashMap<>();
     }
 
-    public JoaState (JoaState other) {
+    public SimpleState (SimpleState other) {
         this.entries = other.getEntries();
     }
 
-    public JoaState (Map<Property<?>, Comparable<?>> entries) {
+    public SimpleState (Map<Property<?>, Comparable<?>> entries) {
         this.entries = new HashMap<>(entries);
     }
 
-    public JoaState (JoaState source, Property<?> property, Comparable<?> value) {
+    public SimpleState (SimpleState source, Property<?> property, Comparable<?> value) {
         this.entries = new HashMap<>(source.getEntries());
         this.entries.putIfAbsent(property, value);
     }
 
-    public JoaState (JoaState source, Map<Property<?>, Comparable<?>> entries) {
+    public SimpleState (SimpleState source, Map<Property<?>, Comparable<?>> entries) {
         this.entries = new HashMap<>(source.getEntries());
         entries.forEach(this.entries::putIfAbsent);
     }
@@ -36,7 +36,7 @@ public class JoaState {
         if (object == null) return false;
         if (object == this) return true;
         if (object.getClass() != this.getClass()) return false;
-        JoaState other = (JoaState) object;
+        SimpleState other = (SimpleState) object;
         return new EqualsBuilder()
                 .append(this.entries, other.entries)
                 .isEquals();
@@ -68,8 +68,8 @@ public class JoaState {
         return this.entries.entrySet();
     }
 
-    public JoaState without (Property<?> property) {
-        JoaState state = new JoaState(this);
+    public SimpleState without (Property<?> property) {
+        SimpleState state = new SimpleState(this);
         state.remove(property);
         return state;
     }

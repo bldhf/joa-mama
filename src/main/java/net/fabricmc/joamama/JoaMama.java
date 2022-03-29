@@ -4,6 +4,7 @@ package net.fabricmc.joamama;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.joamama.dummy.DummyBlockView;
 import net.minecraft.block.*;
 
 import net.minecraft.block.piston.PistonBehavior;
@@ -12,37 +13,35 @@ import net.minecraft.util.registry.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
 public class JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
 
-	JoaStateProperty<Block, BlockState, Float> HARDNESS;
-	JoaStateProperty<Block, BlockState, Integer> LUMINANCE;
-	JoaStateProperty<Block, BlockState, PistonBehavior> PISTON_BEHAVIOR;
+	StateTrait<Block, BlockState, Float> HARDNESS;
+	StateTrait<Block, BlockState, Integer> LUMINANCE;
+	StateTrait<Block, BlockState, PistonBehavior> PISTON_BEHAVIOR;
 
 	@Override
-	public void onInitialize() {
+	public void onInitialize () {
 
 		SetMultimap<Block, BlockState> blockStates = MultimapBuilder.hashKeys().hashSetValues().build();
 		Registry.BLOCK.forEach(block -> blockStates.putAll(block, block.getStateManager().getStates()));
 
-		HARDNESS = new JoaStateProperty<>(
+		HARDNESS = new StateTrait<>(
 				"hardness",
 				"Hardness",
 				"",
-				blockState -> blockState.getHardness(new FakeBlockView(blockState), BlockPos.ORIGIN),
+				blockState -> blockState.getHardness(new DummyBlockView(blockState), BlockPos.ORIGIN),
 				blockStates
 		);
-		LUMINANCE = new JoaStateProperty<>(
+		LUMINANCE = new StateTrait<>(
 				"luminance",
 				"Luminance",
 				"",
 				AbstractBlock.AbstractBlockState::getLuminance,
 				blockStates
 		);
-		PISTON_BEHAVIOR = new JoaStateProperty<>(
+		PISTON_BEHAVIOR = new StateTrait<>(
 				"piston_behavior",
 				"Piston Behavior",
 				"",
@@ -54,6 +53,7 @@ public class JoaMama implements ModInitializer {
 		LUMINANCE.simplify();
 		PISTON_BEHAVIOR.simplify();
 
+		LOGGER.info(HARDNESS.toString());
 		LOGGER.info(LUMINANCE.toString());
 		LOGGER.info(PISTON_BEHAVIOR.toString());
 	}
