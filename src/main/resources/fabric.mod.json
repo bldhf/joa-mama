@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "joamama",
+  "version": "1",
+
+  "name": "JOA MAMA!",
+  "description": "JOA MAMA!",
+  "authors": [
+    "bldhf"
+  ],
+  "contact": {
+  },
+
+  "license": "MIT",
+  "icon": "assets/joamama/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.fabricmc.joamama.JoaMama"
+    ]
+  },
+  "mixins": [
+    "joamama.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.13.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
