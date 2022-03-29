@@ -49,6 +49,7 @@ public class JoaStateProperty <O, S extends State<O, S>, P> extends JoaAbstractP
                     Comparable<?> value = stateEntry.getValue();
                     JoaState testState = state.without(property);
                     // Check if a state has been found with the given property-value pair.
+                    // TODO: the above comment is inaccurate but i don't feel like fixing it right now
                     // Otherwise, add it to the test table.
                     if (test.containsKey(testState)) {
                         // If the test output is not equal to the actual output, the property is not redundant.
