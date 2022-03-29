@@ -23,7 +23,6 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
-
 		SetMultimap<Block, BlockState> blockStates = MultimapBuilder.hashKeys().hashSetValues().build();
 		Registry.BLOCK.forEach(block -> blockStates.putAll(block, block.getStateManager().getStates()));
 

@@ -10,8 +10,8 @@ import net.minecraft.state.property.Property;
 import java.util.*;
 import java.util.function.Function;
 
-public class StateTrait<O, S extends State<O, S>, P> extends Trait<S, P> {
-    private final Table<O, SimpleState, P> entries;
+public class StateTrait<O, S extends State<O, S>, T> extends Trait<S, T> {
+    private final Table<O, SimpleState, T> entries;
 
     @SuppressWarnings ("unused")
     private StateTrait () {
@@ -19,14 +19,14 @@ public class StateTrait<O, S extends State<O, S>, P> extends Trait<S, P> {
         this.entries = null;
     }
 
-    public StateTrait (String id, String name, String desc, Function<S, P> func, SetMultimap<O, S> entries) {
+    public StateTrait (String id, String name, String desc, Function<S, T> func, SetMultimap<O, S> entries) {
         super(id, name, desc, func);
 
         this.entries = HashBasedTable.create();
         entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), this.func.apply(state)));
     }
 
-    private P getEntry (O owner, SimpleState state) {
+    private T getEntry (O owner, SimpleState state) {
         SimpleState newState = new SimpleState(state, this.entries.row(owner).keySet().iterator().next().getEntries());
         return entries.get(owner, newState);
     }
@@ -36,11 +36,11 @@ public class StateTrait<O, S extends State<O, S>, P> extends Trait<S, P> {
         // Loop through every state owner (eg. Block)
         for (O owner : this.entries.rowKeySet()) {
             // Create a table containing test values.
-            Map<SimpleState, P> test = new HashMap<>();
+            Map<SimpleState, T> test = new HashMap<>();
             // Loop through every state that exists for this block.
-            for (Map.Entry<SimpleState, P> rowEntry : this.entries.row(owner).entrySet()) {
+            for (Map.Entry<SimpleState, T> rowEntry : this.entries.row(owner).entrySet()) {
                 SimpleState state = rowEntry.getKey();
-                P output = rowEntry.getValue();
+                T output = rowEntry.getValue();
                 // Loop through every property-value pair of this state.
                 for (Map.Entry<Property<?>, Comparable<?>> stateEntry : state.entrySet()) {
                     Property<?> property = stateEntry.getKey();
@@ -66,7 +66,7 @@ public class StateTrait<O, S extends State<O, S>, P> extends Trait<S, P> {
         this.entries.rowKeySet().forEach(
                 owner -> managers.put(owner, new SimpleStateManager(notRedundant.get(owner)))
         );
-        Table<O, SimpleState, P> newEntries = HashBasedTable.create();
+        Table<O, SimpleState, T> newEntries = HashBasedTable.create();
         managers.forEach(
                 (owner, manager) -> manager.getStates().forEach(
                         state -> newEntries.put(owner, state, this.getEntry(owner, state))

@@ -6,14 +6,14 @@ import net.fabricmc.joamama.gson.TraitsGson;
 
 import java.util.function.Function;
 
-public class Trait<T, P> {
+public class Trait<S, T> {
     protected static final Gson GSON = TraitsGson.gson();
     protected final String id;
     @SerializedName ("property_name")
     protected final String name;
     @SerializedName ("property_description")
     protected final String desc;
-    protected final transient Function<T, P> func;
+    protected final transient Function<S, T> func;
 
     protected Trait () {
         this.id = null;
@@ -22,7 +22,7 @@ public class Trait<T, P> {
         this.func = null;
     }
 
-    protected Trait (String id, String name, String desc, Function<T, P> func) {
+    protected Trait (String id, String name, String desc, Function<S, T> func) {
         this.id = id;
         this.name = name;
         this.desc = desc;
