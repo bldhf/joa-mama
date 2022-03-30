@@ -1,39 +1,32 @@
-package net.fabricmc.joamama.dummy;
+package net.fabricmc.joamama.mock;
 
+import com.google.errorprone.annotations.DoNotCall;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
 
-public class DummyBlockView implements BlockView {
-    BlockState block;
-
-    public DummyBlockView(BlockState block) {
-        this.block = block;
-    }
-
+public record MockBlockView (BlockState state) implements BlockView {
     public BlockEntity getBlockEntity (BlockPos pos) {
         return null;
     }
 
     public BlockState getBlockState (BlockPos pos) {
-        return block;
-    }
-
-    public int getLuminance (BlockPos pos) {
-        return block.getLuminance();
+        return state;
     }
 
     public FluidState getFluidState (BlockPos pos) {
-        return block.getFluidState();
+        return state.getFluidState();
     }
 
+    @DoNotCall
     public int getHeight () {
-        return 0;
+        throw new AssertionError();
     }
 
+    @DoNotCall
     public int getBottomY () {
-        return 0;
+        throw new AssertionError();
     }
 }

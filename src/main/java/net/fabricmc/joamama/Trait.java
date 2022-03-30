@@ -13,20 +13,17 @@ public class Trait<S, T> {
     protected final String name;
     @SerializedName ("property_description")
     protected final String desc;
-    protected final transient Function<S, T> func;
 
     protected Trait () {
         this.id = null;
         this.name = null;
         this.desc = null;
-        this.func = null;
     }
 
-    protected Trait (String id, String name, String desc, Function<S, T> func) {
+    protected Trait (String id, String name, String desc) {
         this.id = id;
         this.name = name;
         this.desc = desc;
-        this.func = func;
     }
 
     public String toString () {
