@@ -13,6 +13,7 @@ public class JoaMama implements ModInitializer {
 	public void onInitialize () {
 		BlockStateTraits.load(Registry.BLOCK);
 
-		LOGGER.info(BlockStateTraits.sideCoversSmallSquareUp().toString());
+		LOGGER.info(BlockStateTraits.topFaceHasRim().toString());
+		BlockStateTraits.test();
 	}
 }
