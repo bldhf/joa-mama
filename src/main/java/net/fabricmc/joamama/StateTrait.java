@@ -4,6 +4,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
+import com.google.gson.annotations.Expose;
 import net.minecraft.state.State;
 import net.minecraft.state.property.Property;
 
@@ -13,6 +14,7 @@ import java.util.function.Function;
 
 public class StateTrait<O, S extends State<O, S>, T> extends Trait<S, T> {
     private final transient BiFunction<O, S, T> func;
+    @Expose
     private final Table<O, SimpleState, T> entries;
 
     @SuppressWarnings ("unused")

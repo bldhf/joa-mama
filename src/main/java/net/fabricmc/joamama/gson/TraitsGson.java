@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 public class TraitsGson {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Table.class, new TableSerializer())
+            .excludeFieldsWithoutExposeAnnotation()
             .disableHtmlEscaping()
             .setPrettyPrinting()
             .create();
