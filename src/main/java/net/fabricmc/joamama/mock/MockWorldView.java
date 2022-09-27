@@ -79,10 +79,7 @@ public record MockWorldView (BlockState state) implements WorldView {
         throw new AssertionError();
     }
 
-    @DoNotCall
-    public WorldBorder getWorldBorder () {
-        throw new AssertionError();
-    }
+    public WorldBorder getWorldBorder () { return new WorldBorder(); }
 
     @DoNotCall
     public List<VoxelShape> getEntityCollisions (Entity entity, Box box) {
