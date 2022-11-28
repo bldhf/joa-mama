@@ -1,6 +1,6 @@
 package net.fabricmc.joamama.mock;
 
-import com.google.errorprone.annotations.DoNotCall;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.fluid.FluidState;
@@ -20,12 +20,12 @@ public record MockBlockView (BlockState state) implements BlockView {
         return state.getFluidState();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getHeight () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getBottomY () {
         throw new AssertionError();
     }

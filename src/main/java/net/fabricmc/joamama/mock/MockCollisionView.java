@@ -1,6 +1,5 @@
 package net.fabricmc.joamama.mock;
 
-import com.google.errorprone.annotations.DoNotCall;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -15,17 +14,17 @@ import net.minecraft.world.border.WorldBorder;
 import java.util.List;
 
 public record MockCollisionView (BlockState state) implements CollisionView {
-    @DoNotCall
+    @Deprecated
     public WorldBorder getWorldBorder () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public BlockView getChunkAsView (int chunkX, int chunkZ) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public List<VoxelShape> getEntityCollisions (Entity entity, Box box) {
         throw new AssertionError();
     }
@@ -42,12 +41,12 @@ public record MockCollisionView (BlockState state) implements CollisionView {
         return state.getFluidState();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getHeight() {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getBottomY() {
         throw new AssertionError();
     }

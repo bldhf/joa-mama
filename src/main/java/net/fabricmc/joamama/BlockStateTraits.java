@@ -1,9 +1,6 @@
 package net.fabricmc.joamama;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import net.fabricmc.joamama.mock.MockBlockView;
 import net.fabricmc.joamama.mock.MockWorldView;
 import net.minecraft.block.*;
@@ -11,14 +8,14 @@ import net.minecraft.block.enums.WireConnection;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnRestriction;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.LavaFluid;
+import net.minecraft.fluid.*;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -37,6 +34,12 @@ public abstract class BlockStateTraits {
     private static final Map<Material, String> materialMap = new HashMap<>();
     private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
+
+    enum WaterloggableValue {
+        FALSE,
+        TRUE,
+        INHERENT
+    }
 
     static {
         blockStates = new Vector<>();
@@ -64,6 +67,7 @@ public abstract class BlockStateTraits {
             if((staticField.getType() == clazz || ignoreClassType ) &&
                     Modifier.isStatic(staticField.getModifiers())) {
                 try {
+                    @SuppressWarnings("unchecked")
                     T value = (T)staticField.get(null);
                     map.put(value, staticField.getName());
                 } catch (IllegalAccessException e) {
@@ -74,13 +78,14 @@ public abstract class BlockStateTraits {
     }
 
     public static ArrayList<String> getTheWholeThing () {
-        ArrayList<String> arr = new ArrayList<>(
-                List.of( /*
-                        new JoaProperty<>(
+
+        return new ArrayList<>(
+                List.of(
+                        /*new JoaProperty<>(
                                 "air",
                                 "Air",
                                 "",
-                                (state) -> state.isAir(),
+                                AbstractBlock.AbstractBlockState::isAir,
                                 blockStates
                         ).toString(),
 
@@ -105,7 +110,7 @@ public abstract class BlockStateTraits {
                                 "luminance",
                                 "Luminance",
                                 "",
-                                (state) -> state.getLuminance(),
+                                AbstractBlock.AbstractBlockState::getLuminance,
                                 blockStates
                         ).toString(),
 
@@ -177,7 +182,7 @@ public abstract class BlockStateTraits {
                                 "opaque",
                                 "Opaque",
                                 "",
-                                (state) -> state.isOpaque(),
+                                AbstractBlock.AbstractBlockState::isOpaque,
                                 blockStates
                         ).toString(),
 
@@ -185,7 +190,7 @@ public abstract class BlockStateTraits {
                                 "piston_behavior",
                                 "Piston Behavior",
                                 "",
-                                (state) -> state.getPistonBehavior(),
+                                AbstractBlock.AbstractBlockState::getPistonBehavior,
                                 blockStates
                         ).toString(),
 
@@ -193,7 +198,7 @@ public abstract class BlockStateTraits {
                                 "has_random_ticks",
                                 "Has Random Ticks",
                                 "",
-                                (state) -> state.hasRandomTicks(),
+                                AbstractBlock.AbstractBlockState::hasRandomTicks,
                                 blockStates
                         ).toString(),
 
@@ -332,6 +337,7 @@ public abstract class BlockStateTraits {
                                 (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.UP).isEmpty(),
                                 blockStates
                         ).toString(),
+
                         new JoaProperty<>(
                                 "side_face_has_collision",
                                 "North Face Has Full Square",
@@ -376,9 +382,10 @@ public abstract class BlockStateTraits {
                                 "connects_to_panes",
                                 "Connects To Panes (North)",
                                 "Whether a glass pane block will connect to this block",
-                                (state) -> new PaneBlock(AbstractBlock.Settings.of(Material.GLASS).strength(0.3f).sounds(BlockSoundGroup.GLASS).nonOpaque()).connectsTo(state, state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH)),
+                                (state) -> ((PaneBlock) Blocks.GLASS_PANE).connectsTo(state, state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH)),
                                 blockStates
                         ).toString(),
+
                         new JoaProperty<>(
                                 "blocks_beacon_beam",
                                 "Blocks Beacon Beam",
@@ -387,9 +394,10 @@ public abstract class BlockStateTraits {
                                 (state) -> !( state.getOpacity(new MockBlockView(state), BlockPos.ORIGIN) < 15 || state.isOf(Blocks.BEDROCK) ),
                                 blockStates
                         ).toString(),
+
                         new JoaProperty<>(
                                 "raid_spawnable",
-                                "Raid-Spawnable",
+                                "Raid Spawnable",
                                 "Whether raids can spawn on this block.",
                                 // net/minecraft/village/raid/Raid.java:573
                                 (state) ->
@@ -398,14 +406,10 @@ public abstract class BlockStateTraits {
                                         new MockWorldView(state),
                                         BlockPos.ORIGIN.up(),
                                         EntityType.RAVAGER
-                                    )
-                                    || (
-                                        state.isOf(Blocks.SNOW) ||
-                                        state.isAir()
-                                    ),
-                                    || state.isOf(Blocks.SNOW),
+                                    ) || state.isOf(Blocks.SNOW),
                                 blockStates
                         ).toString(),
+
                         new JoaProperty<>(
                                 "full_cube",
                                 "Full Cube",
@@ -413,13 +417,14 @@ public abstract class BlockStateTraits {
                                 (state) -> state.isFullCube(new MockWorldView(state), BlockPos.ORIGIN),
                                 blockStates
                         ).toString(),
+
                         new JoaProperty<>(
                                 "occlusion_shape",
                                 "Occlusion Shape",
                                 "Used in rendering",
                                 (state) -> state.isFullCube(new MockWorldView(state), BlockPos.ORIGIN),
                                 blockStates
-                        ).toString(), */
+                        ).toString(),
 
                         new JoaProperty<>(
                                 "bottom_face_has_solid_full_square",
@@ -443,17 +448,32 @@ public abstract class BlockStateTraits {
                                 "This is true if the north face is a full square.",
                                 (state) -> state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH),
                                 blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "waterloggable",
+                                "Waterloggable",
+                                "Whether this block can be waterlogged.",
+                                (state) -> state.getBlock() instanceof Waterloggable ? WaterloggableValue.TRUE : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? WaterloggableValue.INHERENT : WaterloggableValue.FALSE,
+                                blockStates
+                        ).toString(),*/
+
+                        new JoaProperty<>(
+                                "gets_flushed",
+                                "Gets Flushed",
+                                "Whether this block will get destroyed by flowing water.",
+                                null,
+                                blockStates
                         ).toString()
                 )
         );
-
-        return arr;
     }
 
     public static <T> void addBlockTagProperties(ArrayList<String> arr, Class<T> clazz) {
         for (Field staticField : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(staticField.getModifiers())) {
                 try {
+                    @SuppressWarnings("unchecked")
                     TagKey<Block> value = (TagKey<Block>) staticField.get(null);
                     arr.add(new JoaProperty<>(
                             "tag_" + staticField.getName().toLowerCase(),

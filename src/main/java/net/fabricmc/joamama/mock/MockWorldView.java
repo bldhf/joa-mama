@@ -1,6 +1,5 @@
 package net.fabricmc.joamama.mock;
 
-import com.google.errorprone.annotations.DoNotCall;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -24,64 +23,64 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public record MockWorldView (BlockState state) implements WorldView {
-    @DoNotCall
+    @Deprecated
     public Chunk getChunk (int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public boolean isChunkLoaded (int chunkX, int chunkZ) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getTopY (Heightmap.Type heightmap, int x, int z) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getAmbientDarkness () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public BiomeAccess getBiomeAccess () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public RegistryEntry<Biome> getGeneratorStoredBiome (int biomeX, int biomeY, int biomeZ) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public boolean isClient () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public int getSeaLevel() {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public DimensionType getDimension () {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public float getBrightness (Direction direction, boolean shaded) {
         throw new AssertionError();
     }
 
-    @DoNotCall
+    @Deprecated
     public LightingProvider getLightingProvider () {
         throw new AssertionError();
     }
 
     public WorldBorder getWorldBorder () { return new WorldBorder(); }
 
-    @DoNotCall
+    @Deprecated
     public List<VoxelShape> getEntityCollisions (Entity entity, Box box) {
         throw new AssertionError();
     }
