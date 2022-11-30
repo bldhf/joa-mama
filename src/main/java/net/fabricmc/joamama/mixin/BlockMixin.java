@@ -2,7 +2,7 @@ package net.fabricmc.joamama.mixin;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +19,8 @@ public abstract class BlockMixin extends AbstractBlock{
             at = @At ("RETURN"),
             cancellable = true
     )
+    @SuppressWarnings("all")
     private void onToString (CallbackInfoReturnable<String> cir) {
-        cir.setReturnValue(Registry.BLOCK.getId((Block) (AbstractBlock) this).toString());
+        cir.setReturnValue(Registries.BLOCK.getId((Block) (AbstractBlock) this).toString());
     }
 }

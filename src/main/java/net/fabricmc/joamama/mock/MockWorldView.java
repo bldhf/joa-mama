@@ -4,10 +4,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.WorldView;
@@ -65,6 +67,16 @@ public record MockWorldView (BlockState state) implements WorldView {
 
     @Deprecated
     public DimensionType getDimension () {
+        throw new AssertionError();
+    }
+
+    @Deprecated
+    public DynamicRegistryManager getRegistryManager() {
+        throw new AssertionError();
+    }
+
+    @Deprecated
+    public FeatureSet getEnabledFeatures() {
         throw new AssertionError();
     }
 

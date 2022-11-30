@@ -9,17 +9,15 @@ import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnRestriction;
 import net.minecraft.fluid.*;
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
-import net.minecraft.tag.BlockTags;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.SpawnHelper;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import org.jetbrains.annotations.Nullable;
@@ -39,6 +37,12 @@ public abstract class BlockStateTraits {
         FALSE,
         TRUE,
         INHERENT
+    }
+
+    enum GetsFlushedValue {
+        FALSE,
+        TRUE,
+        NOT_APPLICABLE
     }
 
     static {
@@ -462,7 +466,27 @@ public abstract class BlockStateTraits {
                                 "gets_flushed",
                                 "Gets Flushed",
                                 "Whether this block will get destroyed by flowing water.",
-                                null,
+                                (state) -> (state.getBlock() instanceof FluidBlock) ?
+                                        GetsFlushedValue.NOT_APPLICABLE :
+                                                Arrays.asList(
+                                                        FluidFillable.class,
+                                                        DoorBlock.class,
+                                                        AbstractSignBlock.class
+                                                ).contains(state.getBlock().getClass()) ||
+                                                Arrays.asList(
+                                                        Blocks.LADDER,
+                                                        Blocks.SUGAR_CANE,
+                                                        Blocks.BUBBLE_COLUMN
+                                                ).contains(state.getBlock()) ||
+                                                Arrays.asList(
+                                                        Material.PORTAL,
+                                                        Material.STRUCTURE_VOID,
+                                                        Material.UNDERWATER_PLANT,
+                                                        Material.REPLACEABLE_UNDERWATER_PLANT
+                                                ).contains(state.getMaterial()) ||
+                                                state.getMaterial().blocksMovement() ?
+                                                        GetsFlushedValue.FALSE :
+                                                                GetsFlushedValue.TRUE,
                                 blockStates
                         ).toString()
                 )

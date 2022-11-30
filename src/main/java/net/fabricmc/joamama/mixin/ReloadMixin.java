@@ -4,7 +4,6 @@ import com.mojang.datafixers.DataFixer;
 import net.fabricmc.joamama.JoaMama;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.*;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.util.ApiServices;
 import net.minecraft.util.thread.ReentrantThreadExecutor;

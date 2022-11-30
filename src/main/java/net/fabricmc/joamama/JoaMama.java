@@ -2,8 +2,8 @@ package net.fabricmc.joamama;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.tag.BlockTags;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.BlockTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
-		BlockStateTraits.load(Registry.BLOCK);
+		BlockStateTraits.load(Registries.BLOCK);
 
 		output.addAll(BlockStateTraits.getTheWholeThing());
 
