@@ -4,7 +4,12 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Table;
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import net.fabricmc.joamama.entity.EntityState;
+import net.fabricmc.joamama.gson.TraitsGson;
+import net.minecraft.entity.Entity;
 import net.minecraft.state.State;
 import net.minecraft.state.property.Property;
 
@@ -12,25 +17,49 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class StateTrait<O, S extends State<O, S>, T> extends Trait<S, T> {
-    private final transient BiFunction<O, S, T> func;
+public class StateTrait<O, T> {
+    private static final Gson GSON = TraitsGson.gson();
+    @Expose
+    private final String id;
+    @Expose
+    @SerializedName("property_name")
+    private final String name;
+    @Expose
+    @SerializedName ("property_description")
+    private final String desc;
     @Expose
     private final Table<O, SimpleState, T> entries;
 
     @SuppressWarnings ("unused")
     private StateTrait () {
-        super();
-        this.func = null;
+        this.id = null;
+        this.name = null;
+        this.desc = null;
         this.entries = null;
     }
 
-    public StateTrait (String id, String name, String desc, BiFunction<O, S, T> func, SetMultimap<O, S> entries) {
-        super(id, name, desc);
-        this.func = func;
+    public <S extends State<O, S>> StateTrait (String id, String name, String desc, BiFunction<O, S, T> func, SetMultimap<O, S> entries) {
+        this.id = id;
+        this.name = name;
+        this.desc = desc;
         this.entries = HashBasedTable.create();
-        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), this.func.apply(owner, state)));
+        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), func.apply(owner, state)));
 
         this.simplify();
+    }
+
+    public StateTrait (String id, String name, String desc, Function<Entity, T> func, SetMultimap<O, EntityState> entries) {
+        this.id = id;
+        this.name = name;
+        this.desc = desc;
+        this.entries = HashBasedTable.create();
+        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), func.apply(state.entity())));
+
+        this.simplify();
+    }
+
+    public String toString () {
+        return GSON.toJson(this);
     }
 
     private T getTrait (O owner, SimpleState state) {

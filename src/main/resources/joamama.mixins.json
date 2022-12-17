@@ -4,6 +4,7 @@
   "package": "net.fabricmc.joamama.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "IntegratedServerAccessor",
     "BlockMixin",
     "ReloadMixin"
   ],

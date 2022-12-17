@@ -1,9 +1,17 @@
 package net.fabricmc.joamama;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.joamama.entity.EntityState;
+import net.fabricmc.joamama.entity.EntityTraits;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.recipebook.ClientRecipeBook;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.stat.StatHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import static net.fabricmc.joamama.BlockStateTraits.addBlockTagProperties;
-
 public class JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
@@ -23,17 +29,25 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
-		BlockStateTraits.load(Registries.BLOCK);
+		//BlockStateTraits.load(Registries.BLOCK);
+		EntityTraits.load(Registries.ENTITY_TYPE);
 
-		output.addAll(BlockStateTraits.getTheWholeThing());
+		//output.addAll(BlockStateTraits.getTheWholeThing());
+		output.addAll(EntityTraits.getTheWholeThing());
 
 		save();
 	}
 
-	public static void onWorldLoadOrSumthn() {
+	public static void onWorldLoadOrSumthn(IntegratedServer server, ServerWorld world, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
 		LOGGER.info("YOOOOOOOOOOOOOOOOOOOOO");
 
-		addBlockTagProperties(output, BlockTags.class);
+		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
+		//BiomeTraits.load(server.getCombinedDynamicRegistries()); how do i do this
+
+		//addBlockTagProperties(output, BlockTags.class);
+
+		output.addAll(EntityTraits.getTheWholeThing());
+		//output.addAll(BiomeTraits.getTheWholeThing());
 
 		save();
 	}
