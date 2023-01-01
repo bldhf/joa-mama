@@ -13,6 +13,7 @@ import net.minecraft.state.property.IntProperty;
 public abstract class EntityProperties {
     public static final BooleanProperty IS_BABY = BooleanProperty.of("is_baby");
     public static final BooleanProperty MARKER = BooleanProperty.of("marker");
+    public static final EnumProperty<PandaEntity.Gene> PANDA_PHENOTYPE = EnumProperty.of("variant", PandaEntity.Gene.class);
     public static final EnumProperty<Pose> CAMEL_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.SITTING);
     public static final EnumProperty<Pose> GOAT_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.LONG_JUMPING);
     public static final EnumProperty<Pose> PLAYER_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.FALL_FLYING, Pose.SLEEPING, Pose.SWIMMING, Pose.SPIN_ATTACK, Pose.CROUCHING, Pose.DYING);
@@ -21,6 +22,7 @@ public abstract class EntityProperties {
     public static final IntProperty PUFF_STATE = IntProperty.of("puff_state", 0, 2);
     public static final EnumProperty<SlimeSize> SLIME_SIZE = EnumProperty.of("size", SlimeSize.class);
     public static final BooleanProperty SMALL = BooleanProperty.of("small");
+    public static final BooleanProperty IS_TAMED = BooleanProperty.of("is_tamed");
 
     public static Entity setArmorStandFlags (EntityState state, Entity entity) {
         if (entity instanceof ArmorStandEntity) {
@@ -60,6 +62,14 @@ public abstract class EntityProperties {
         return entity;
     }
 
+    public static Entity setPandaPhenotype (EntityState state, Entity entity) {
+        if (entity instanceof PandaEntity) {
+            ((PandaEntity) entity).setMainGene((PandaEntity.Gene) state.get(PANDA_PHENOTYPE));
+            ((PandaEntity) entity).setHiddenGene((PandaEntity.Gene) state.get(PANDA_PHENOTYPE));
+        }
+        return entity;
+    }
+
     public static Entity setPuffState (EntityState state, Entity entity) {
         if (entity instanceof PufferfishEntity) {
             ((PufferfishEntity) entity).setPuffState((Integer) state.get(PUFF_STATE));
@@ -70,6 +80,15 @@ public abstract class EntityProperties {
     public static Entity setSize (EntityState state, Entity entity) {
         if (entity instanceof SlimeEntity) {
             ((SlimeEntity) entity).setSize(((SlimeSize) state.get(SLIME_SIZE)).toInt(), true);
+        }
+        return entity;
+    }
+
+    public static Entity setIsTamed (EntityState state, Entity entity) {
+        if (entity instanceof AbstractHorseEntity) {
+            ((AbstractHorseEntity) entity).setTame((Boolean) state.get(IS_TAMED));
+        } else if (entity instanceof TameableEntity) {
+            ((TameableEntity) entity).setTamed((Boolean) state.get(IS_TAMED));
         }
         return entity;
     }

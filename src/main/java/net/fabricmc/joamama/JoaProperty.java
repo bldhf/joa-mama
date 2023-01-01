@@ -19,9 +19,8 @@ public class JoaProperty <T, P> {
     @Expose
     @SerializedName("property_description")
     private final String desc;
-    private final transient Function<T, P> func;
     @Expose
-    private final HashMap<T, P> entries;
+    private final HashMap<String, P> entries;
 
     static {
         gson = TraitsGson.gson();
@@ -29,7 +28,6 @@ public class JoaProperty <T, P> {
 
     private JoaProperty () {
         this.id = this.name = this.desc = null;
-        this.func = (t -> null);
         this.entries = null;
     }
 
@@ -37,9 +35,16 @@ public class JoaProperty <T, P> {
         this.id = id;
         this.name = name;
         this.desc = desc;
-        this.func = func;
         this.entries = new HashMap<>();
-        entries.forEach(entry -> this.entries.put(entry, this.func.apply(entry)));
+        entries.forEach(entry -> this.entries.put(entry.toString(), func.apply(entry)));
+    }
+
+    public JoaProperty (String id, String name, String desc, Function<T, P> func, Iterable<T> entries, Function<T, String> toString) {
+        this.id = id;
+        this.name = name;
+        this.desc = desc;
+        this.entries = new HashMap<>();
+        entries.forEach(entry -> this.entries.put(toString.apply(entry), func.apply(entry)));
     }
 
     public String toString () {

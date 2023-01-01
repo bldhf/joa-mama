@@ -49,6 +49,7 @@ public class StateTrait<O, T> {
     }
 
     public StateTrait (String id, String name, String desc, Function<Entity, T> func, SetMultimap<O, EntityState> entries) {
+        JoaMama.LOGGER.error(id);
         this.id = id;
         this.name = name;
         this.desc = desc;

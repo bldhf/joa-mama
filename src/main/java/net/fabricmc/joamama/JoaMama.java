@@ -2,6 +2,7 @@ package net.fabricmc.joamama;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.joamama.entity.EntityState;
+import net.fabricmc.joamama.entity.EntityStateManager;
 import net.fabricmc.joamama.entity.EntityTraits;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -9,9 +10,11 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.StatHandler;
+import net.minecraft.world.biome.Biome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,29 +33,29 @@ public class JoaMama implements ModInitializer {
 	@Override
 	public void onInitialize () {
 		//BlockStateTraits.load(Registries.BLOCK);
-		EntityTraits.load(Registries.ENTITY_TYPE);
 
 		//output.addAll(BlockStateTraits.getTheWholeThing());
-		output.addAll(EntityTraits.getTheWholeThing());
 
 		save();
 	}
 
-	public static void onWorldLoadOrSumthn(IntegratedServer server, ServerWorld world, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
+	public static void onWorldLoadOrSumthn (IntegratedServer server, ServerWorld world, Registry<Biome> biomes, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
 		LOGGER.info("YOOOOOOOOOOOOOOOOOOOOO");
-
-		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
-		//BiomeTraits.load(server.getCombinedDynamicRegistries()); how do i do this
 
 		//addBlockTagProperties(output, BlockTags.class);
 
+		EntityStateManager.load(world);
+		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
+		EntityTraits.load(Registries.ENTITY_TYPE);
 		output.addAll(EntityTraits.getTheWholeThing());
+
+		//BiomeTraits.load(biomes);
 		//output.addAll(BiomeTraits.getTheWholeThing());
 
 		save();
 	}
 
-	private static void save() {
+	private static void save () {
 		try (Writer writer = Files.newBufferedWriter(OUTPUT_PATH)) {
 			writer.write("[\n" + String.join(",\n", output) + "\n]"); // scuffed but I didn't find a better solution lol
 			writer.flush();
