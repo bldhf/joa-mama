@@ -52,10 +52,14 @@ public class EntityStateManager {
             }
         }
         entityProperties.get(EntityType.ARMOR_STAND).addAll(Set.of(EntityProperties.MARKER, EntityProperties.SMALL));
+        entityProperties.get(EntityType.BOAT).add(EntityProperties.BOAT_VARIANT);
+        entityProperties.get(EntityType.CHEST_BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CAMEL).add(EntityProperties.CAMEL_POSE);
         entityProperties.get(EntityType.GOAT).add(EntityProperties.GOAT_POSE);
-        entityProperties.get(EntityType.PANDA).add(EntityProperties.PANDA_PHENOTYPE);
+        entityProperties.get(EntityType.PANDA).add(EntityProperties.PANDA_VARIANT);
         entityProperties.get(EntityType.PUFFERFISH).add(EntityProperties.PUFF_STATE);
+        entityProperties.get(EntityType.SHEEP).add(EntityProperties.SHEARED);
+        entityProperties.get(EntityType.SNOW_GOLEM).add(EntityProperties.HAS_PUMPKIN);
         entityProperties.get(EntityType.VILLAGER).add(EntityProperties.VILLAGER_POSE);
         entityProperties.get(EntityType.WARDEN).add(EntityProperties.WARDEN_POSE);
         entityProperties.get(EntityType.PLAYER).add(EntityProperties.PLAYER_POSE);

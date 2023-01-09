@@ -104,7 +104,7 @@ public abstract class EntityTraits {
                                 "Can Ride Boat",
                                 "",
                                 entity -> entity.isPushable()
-                                        && entity.getWidth() < 1.375
+                                        && entity.getWidth() < EntityType.BOAT.getWidth()
                                         && entity instanceof LivingEntity
                                         && !(entity instanceof WaterCreatureEntity)
                                         && !(entity instanceof PlayerEntity),
@@ -139,6 +139,17 @@ public abstract class EntityTraits {
                                 "Fire Immune",
                                 "",
                                 Entity::isFireImmune,
+                                entityStates
+                        ).toString(),
+                        new StateTrait<>(
+                                "height_offset",
+                                "Height Offset",
+                                "The height offset this entity adds to itself when riding a vehicle.",
+                                entity -> {
+                                    if (entity instanceof ShulkerEntity) {
+                                        return "1.875 - vehicle's mounted height offset";
+                                    } else return entity.getHeightOffset();
+                                },
                                 entityStates
                         ).toString(),
                         new StateTrait<>(
@@ -178,10 +189,30 @@ public abstract class EntityTraits {
                                 entityStates
                         ).toString(),
                         new StateTrait<>(
+                                "mounted_height_offset",
+                                "Mounted Height Offset",
+                                "The height offset this entity adds to its passengers.",
+                                entity -> {
+                                    if (entity instanceof CamelEntity) {
+                                        return "TODO";
+                                    } else if (entity instanceof StriderEntity) {
+                                        return entity.getMountedHeightOffset() + " ± 0.06 if its limbs are moving";
+                                    } else return entity.getMountedHeightOffset();
+                                },
+                                entityStates
+                        ).toString(),
+                        new StateTrait<>(
                                 "savable",
                                 "Savable",
                                 "Whether this is saved to the world. Entities that are not savable are lost when unloaded.",
                                 entity -> entity.getType().isSaveable(),
+                                entityStates
+                        ).toString(),
+                        new StateTrait<>(
+                                "shearable",
+                                "Shearable",
+                                "",
+                                entity -> entity instanceof Shearable && ((Shearable) entity).isShearable(),
                                 entityStates
                         ).toString(),
                         new StateTrait<>(

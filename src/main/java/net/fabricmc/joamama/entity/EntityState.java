@@ -31,13 +31,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class EntityState {
-    private static IntegratedServer server;
-    private static ServerWorld world;
-    private static MinecraftClient client;
-    private static ClientWorld clientWorld;
-    private static ClientPlayNetworkHandler networkHandler;
-    private static StatHandler stats;
-    private static ClientRecipeBook recipeBook;
     private final EntityType<?> type;
     private final Map<Property<?>, Comparable<?>> entries;
     private static Map<EntityType<?>, Function<EntityState, Entity>> toEntity;
@@ -73,13 +66,6 @@ public class EntityState {
     }
 
     public static void load (IntegratedServer server, ServerWorld world, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
-        EntityState.server = server;
-        EntityState.world = world;
-        EntityState.client = client;
-        EntityState.clientWorld = clientWorld;
-        EntityState.networkHandler = networkHandler;
-        EntityState.stats = stats;
-        EntityState.recipeBook = recipeBook;
         toEntity = new HashMap<>();
         for (EntityType<?> type : Registries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
@@ -99,10 +85,14 @@ public class EntityState {
             }
         }
         registerRule(EntityType.ARMOR_STAND, EntityProperties::setArmorStandFlags);
+        registerRule(EntityType.BOAT, EntityProperties::setVariant);
+        registerRule(EntityType.CHEST_BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CAMEL, EntityProperties::setPose);
         registerRule(EntityType.GOAT, EntityProperties::setPose);
-        registerRule(EntityType.PANDA, EntityProperties::setPandaPhenotype);
+        registerRule(EntityType.PANDA, EntityProperties::setVariant);
         registerRule(EntityType.PUFFERFISH, EntityProperties::setPuffState);
+        registerRule(EntityType.SHEEP, EntityProperties::setSheared);
+        registerRule(EntityType.SNOW_GOLEM, EntityProperties::setSheared);
         registerRule(EntityType.VILLAGER, EntityProperties::setPose);
         registerRule(EntityType.WARDEN, EntityProperties::setPose);
         registerRule(EntityType.PLAYER, EntityProperties::setPose);

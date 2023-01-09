@@ -1,10 +1,12 @@
 package net.fabricmc.joamama.entity;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.VariantHolder;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.EnumProperty;
@@ -13,16 +15,19 @@ import net.minecraft.state.property.IntProperty;
 public abstract class EntityProperties {
     public static final BooleanProperty IS_BABY = BooleanProperty.of("is_baby");
     public static final BooleanProperty MARKER = BooleanProperty.of("marker");
-    public static final EnumProperty<PandaEntity.Gene> PANDA_PHENOTYPE = EnumProperty.of("variant", PandaEntity.Gene.class);
     public static final EnumProperty<Pose> CAMEL_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.SITTING);
     public static final EnumProperty<Pose> GOAT_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.LONG_JUMPING);
     public static final EnumProperty<Pose> PLAYER_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.FALL_FLYING, Pose.SLEEPING, Pose.SWIMMING, Pose.SPIN_ATTACK, Pose.CROUCHING, Pose.DYING);
     public static final EnumProperty<Pose> VILLAGER_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.SLEEPING);
     public static final EnumProperty<Pose> WARDEN_POSE = EnumProperty.of("pose", Pose.class, Pose.STANDING, Pose.ROARING, Pose.SNIFFING, Pose.EMERGING, Pose.DIGGING);
     public static final IntProperty PUFF_STATE = IntProperty.of("puff_state", 0, 2);
+    public static final BooleanProperty HAS_PUMPKIN = BooleanProperty.of("has_pumpkin");
+    public static final BooleanProperty SHEARED = BooleanProperty.of("sheared");
     public static final EnumProperty<SlimeSize> SLIME_SIZE = EnumProperty.of("size", SlimeSize.class);
     public static final BooleanProperty SMALL = BooleanProperty.of("small");
     public static final BooleanProperty IS_TAMED = BooleanProperty.of("is_tamed");
+    public static final EnumProperty<BoatEntity.Type> BOAT_VARIANT = EnumProperty.of("variant", BoatEntity.Type.class);
+    public static final EnumProperty<PandaEntity.Gene> PANDA_VARIANT = EnumProperty.of("variant", PandaEntity.Gene.class);
 
     public static Entity setArmorStandFlags (EntityState state, Entity entity) {
         if (entity instanceof ArmorStandEntity) {
@@ -62,17 +67,18 @@ public abstract class EntityProperties {
         return entity;
     }
 
-    public static Entity setPandaPhenotype (EntityState state, Entity entity) {
-        if (entity instanceof PandaEntity) {
-            ((PandaEntity) entity).setMainGene((PandaEntity.Gene) state.get(PANDA_PHENOTYPE));
-            ((PandaEntity) entity).setHiddenGene((PandaEntity.Gene) state.get(PANDA_PHENOTYPE));
+    public static Entity setPuffState (EntityState state, Entity entity) {
+        if (entity instanceof PufferfishEntity) {
+            ((PufferfishEntity) entity).setPuffState((Integer) state.get(PUFF_STATE));
         }
         return entity;
     }
 
-    public static Entity setPuffState (EntityState state, Entity entity) {
-        if (entity instanceof PufferfishEntity) {
-            ((PufferfishEntity) entity).setPuffState((Integer) state.get(PUFF_STATE));
+    public static Entity setSheared (EntityState state, Entity entity) {
+        if (entity instanceof SheepEntity) {
+            ((SheepEntity) entity).setSheared((Boolean) state.get(SHEARED));
+        } else if (entity instanceof SnowGolemEntity) {
+            ((SnowGolemEntity) entity).setHasPumpkin((Boolean) state.get(HAS_PUMPKIN));
         }
         return entity;
     }
@@ -89,6 +95,16 @@ public abstract class EntityProperties {
             ((AbstractHorseEntity) entity).setTame((Boolean) state.get(IS_TAMED));
         } else if (entity instanceof TameableEntity) {
             ((TameableEntity) entity).setTamed((Boolean) state.get(IS_TAMED));
+        }
+        return entity;
+    }
+
+    public static Entity setVariant (EntityState state, Entity entity) {
+        if (entity instanceof BoatEntity) {
+            ((BoatEntity) entity).setVariant((BoatEntity.Type) state.get(BOAT_VARIANT));
+        } else if (entity instanceof PandaEntity) {
+            ((PandaEntity) entity).setMainGene((PandaEntity.Gene) state.get(PANDA_VARIANT));
+            ((PandaEntity) entity).setHiddenGene((PandaEntity.Gene) state.get(PANDA_VARIANT));
         }
         return entity;
     }
