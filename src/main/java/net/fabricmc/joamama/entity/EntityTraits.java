@@ -4,6 +4,8 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.StateTrait;
+import net.fabricmc.joamama.mixin.EntityTypeAccessor;
+import net.minecraft.block.Block;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -14,6 +16,7 @@ import net.minecraft.entity.vehicle.AbstractMinecartEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class EntityTraits {
     private static final EntityGroup EntityGroup_NONE = new EntityGroup();
@@ -49,6 +52,13 @@ public abstract class EntityTraits {
                                 entityStates
                         ).toString(),
                         new StateTrait<>(
+                                "can_spawn_inside",
+                                "Can Spawn Inside",
+                                "Normally dangerous blocks that this entity can spawn inside.\nThis only includes wither roses, sweet berry bushes, and powder snow.\nSee Fire Immune for entities that can spawn inside of fire.",
+                                entity -> ((EntityTypeAccessor) entity.getType()).getCanSpawnInside().stream().map(Block::toString).collect(Collectors.toSet()),
+                                entityStates
+                        ).toString(),
+                        new StateTrait<>(
                                 "base_armor",
                                 "Base Armor",
                                 "The amount of armor points this has without wearing anything.",
@@ -74,6 +84,13 @@ public abstract class EntityTraits {
                                 "Bucketable",
                                 "",
                                 entity -> entity instanceof Bucketable,
+                                entityStates
+                        ).toString(),
+                        new StateTrait<>(
+                                "can_be_ridden_in_water",
+                                "Can Be Ridden In Water",
+                                "",
+                                Entity::canBeRiddenInWater,
                                 entityStates
                         ).toString(),
                         new StateTrait<>(
@@ -219,7 +236,7 @@ public abstract class EntityTraits {
                                 "step_height",
                                 "Step Height",
                                 "",
-                                entity -> entity.stepHeight,
+                                Entity::getStepHeight,
                                 entityStates
                         ).toString(),
                         new StateTrait<>(
