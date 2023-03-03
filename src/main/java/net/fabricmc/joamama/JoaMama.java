@@ -11,6 +11,7 @@ import net.minecraft.client.recipebook.ClientRecipeBook;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.StatHandler;
@@ -32,25 +33,25 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
-		//BlockStateTraits.load(Registries.BLOCK);
-
-		//output.addAll(BlockStateTraits.getTheWholeThing());
+		BlockStateTraits.load(Registries.BLOCK);
+		output.addAll(BlockStateTraits.getTheWholeThing());
 
 		save();
 	}
 
 	public static void onWorldLoadOrSumthn (IntegratedServer server, ServerWorld world, Registry<Biome> biomes, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
+//	public static void onWorldLoadOrSumthn () {
 		LOGGER.info("YOOOOOOOOOOOOOOOOOOOOO");
 
-		//addBlockTagProperties(output, BlockTags.class);
+		BlockStateTraits.addBlockTagProperties(output, BlockTags.class);
 
-		EntityStateManager.load(world);
-		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
-		EntityTraits.load(Registries.ENTITY_TYPE);
-		output.addAll(EntityTraits.getTheWholeThing());
+//		EntityStateManager.load(world);
+//		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
+//		EntityTraits.load(Registries.ENTITY_TYPE);
+//		output.addAll(EntityTraits.getTheWholeThing());
 
-		//BiomeTraits.load(biomes);
-		//output.addAll(BiomeTraits.getTheWholeThing());
+//		BiomeTraits.load(biomes);
+//		output.addAll(BiomeTraits.getTheWholeThing());
 
 		save();
 	}

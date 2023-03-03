@@ -1,6 +1,7 @@
 package net.fabricmc.joamama;
 
 import com.google.common.collect.*;
+import net.fabricmc.joamama.mixin.FireBlockAccessor;
 import net.fabricmc.joamama.mock.MockBlockView;
 import net.fabricmc.joamama.mock.MockWorldView;
 import net.minecraft.block.*;
@@ -32,18 +33,6 @@ public abstract class BlockStateTraits {
     private static final Map<Material, String> materialMap = new HashMap<>();
     private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
-
-    enum WaterloggableValue {
-        FALSE,
-        TRUE,
-        INHERENT
-    }
-
-    enum GetsFlushedValue {
-        FALSE,
-        TRUE,
-        NOT_APPLICABLE
-    }
 
     static {
         blockStates = new Vector<>();
@@ -85,13 +74,6 @@ public abstract class BlockStateTraits {
 
         return new ArrayList<>(
                 List.of(
-                        /*new JoaProperty<>(
-                                "air",
-                                "Air",
-                                "",
-                                AbstractBlock.AbstractBlockState::isAir,
-                                blockStates
-                        ).toString(),
 
                         new JoaProperty<>(
                                 "hardness",
@@ -191,16 +173,65 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "piston_behavior",
-                                "Piston Behavior",
-                                "",
-                                AbstractBlock.AbstractBlockState::getPistonBehavior,
+                                "movable",
+                                "Movable",
+                                "Whether it can be pushed by a piston, stops the piston from extending, or whether attempting to push it destroys the block.",
+                                state -> switch (state.getPistonBehavior()) {
+                                    case NORMAL, PUSH_ONLY -> "Yes";
+                                    case BLOCK -> "No";
+                                    case DESTROY -> "Breaks";
+                                    case IGNORE -> null;
+                                },
                                 blockStates
                         ).toString(),
 
                         new JoaProperty<>(
-                                "has_random_ticks",
-                                "Has Random Ticks",
+                                "sticky",
+                                "Sticky",
+                                "If the block can be pulled by a sticky piston or an adjacent slime/honey block.</p><p>Slime and honey are listed as 'partially' as they are not sticky when pulled by one another.",
+                                state -> switch (state.getPistonBehavior()) {
+                                    case NORMAL -> "Yes";
+                                    case BLOCK, DESTROY, PUSH_ONLY -> "No";
+                                    case IGNORE -> null;
+                                },
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "gets_random_ticked",
+                                "Gets Random Ticked",
+                                "",
+                                AbstractBlock.AbstractBlockState::hasRandomTicks,
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "flammable",
+                                "Flammable",
+                                "",
+                                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnChance(state) > 0,
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "burn_chance",
+                                "Burn Chance",
+                                "",
+                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetBurnChance,
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "fire_spread_chance",
+                                "Fire Spread Chance",
+                                "",
+                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetSpreadChance,
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "gets_random_ticked",
+                                "Gets Random Ticked",
                                 "",
                                 AbstractBlock.AbstractBlockState::hasRandomTicks,
                                 blockStates
@@ -215,18 +246,10 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "should_suffocate",
-                                "Should Suffocate",
+                                "suffocates_mobs",
+                                "Suffocates Mobs",
                                 "",
                                 (state) -> state.shouldSuffocate(new MockBlockView(state), BlockPos.ORIGIN),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "translucent",
-                                "Translucent",
-                                "",
-                                (state) -> state.isTranslucent(new MockBlockView(state), BlockPos.ORIGIN),
                                 blockStates
                         ).toString(),
 
@@ -263,34 +286,10 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "north_face_has_full_square",
-                                "North Face Has Full Square",
-                                "This is true if the north face is a full square.",
+                                "side_face_has_full_square",
+                                "Side Face Has Full Square (Notrh)",
+                                "This is true if the north face has a full, square surface.",
                                 (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.NORTH),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "south_face_has_full_square",
-                                "South Face Has Full Square",
-                                "This is true if the south face is a full square.",
-                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.SOUTH),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "west_face_has_full_square",
-                                "West Face Has Full Square",
-                                "This is true if the west face is a full square.",
-                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.WEST),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "east_face_has_full_square",
-                                "East Face Has Full Square",
-                                "This is true if the east face is a full square.",
-                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.EAST),
                                 blockStates
                         ).toString(),
 
@@ -328,7 +327,7 @@ public abstract class BlockStateTraits {
 
                         new JoaProperty<>(
                                 "bottom_face_has_collision",
-                                "Bottom Face Has Small Square",
+                                "Bottom Face Has Collision",
                                 "This is true if the bottom side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
                                 (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.DOWN).isEmpty(),
                                 blockStates
@@ -336,7 +335,7 @@ public abstract class BlockStateTraits {
 
                         new JoaProperty<>(
                                 "top_face_has_collision",
-                                "Top Face Has Small Square",
+                                "Top Face Has Collision",
                                 "This is true if the top side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
                                 (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.UP).isEmpty(),
                                 blockStates
@@ -344,33 +343,9 @@ public abstract class BlockStateTraits {
 
                         new JoaProperty<>(
                                 "side_face_has_collision",
-                                "North Face Has Full Square",
+                                "Side Face Has Collision (North)",
                                 "This is true if the north side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
                                 (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.NORTH).isEmpty(),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "south_face_has_collision",
-                                "South Face Has Full Square",
-                                "This is true if the south side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.SOUTH).isEmpty(),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "west_face_has_collision",
-                                "West Face Has Full Square",
-                                "This is true if the west side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.WEST).isEmpty(),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "east_face_has_collision",
-                                "East Face Has Full Square",
-                                "This is true if the east side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.EAST).isEmpty(),
                                 blockStates
                         ).toString(),
 
@@ -400,19 +375,30 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "raid_spawnable",
-                                "Raid Spawnable",
-                                "Whether raids can spawn on this block.",
-                                // net/minecraft/village/raid/Raid.java:573
-                                (state) ->
-                                    SpawnHelper.canSpawn(
-                                        SpawnRestriction.Location.ON_GROUND,
-                                        new MockWorldView(state),
-                                        BlockPos.ORIGIN.up(),
-                                        EntityType.RAVAGER
-                                    ) || state.isOf(Blocks.SNOW),
+                                "obstructs_cactus",
+                                "Obstructs Cactus",
+                                "Whether placing this block next to cactus destroys it.",
+                                (state) -> (
+                                        state.getMaterial().isSolid() ||
+                                        Arrays.<Fluid>asList(Fluids.LAVA, Fluids.LAVA).contains(state.getFluidState().getFluid())
+                                ),
                                 blockStates
                         ).toString(),
+
+//                        new JoaProperty<>(
+//                                "raid_spawnable",
+//                                "Raid Spawnable",
+//                                "Whether raids can spawn on this block.",
+//                                // net/minecraft/village/raid/Raid.java:573
+//                                (state) ->
+//                                    SpawnHelper.canSpawn(
+//                                        SpawnRestriction.Location.ON_GROUND,
+//                                        new MockWorldView(state),
+//                                        BlockPos.ORIGIN.up(),
+//                                        EntityType.RAVAGER
+//                                    ) || state.isOf(Blocks.SNOW),
+//                                blockStates
+//                        ).toString(),
 
                         new JoaProperty<>(
                                 "full_cube",
@@ -447,8 +433,8 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "north_face_has_solid_full_square",
-                                "North Face Has Solid Full Square",
+                                "side_face_has_solid_full_square",
+                                "Side Face Has Solid Full Square (North)",
                                 "This is true if the north face is a full square.",
                                 (state) -> state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH),
                                 blockStates
@@ -458,35 +444,33 @@ public abstract class BlockStateTraits {
                                 "waterloggable",
                                 "Waterloggable",
                                 "Whether this block can be waterlogged.",
-                                (state) -> state.getBlock() instanceof Waterloggable ? WaterloggableValue.TRUE : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? WaterloggableValue.INHERENT : WaterloggableValue.FALSE,
+                                (state) -> state.getBlock() instanceof Waterloggable ? true : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? "Inherent" : false,
                                 blockStates
-                        ).toString(),*/
+                        ).toString(),
 
                         new JoaProperty<>(
                                 "gets_flushed",
                                 "Gets Flushed",
                                 "Whether this block will get destroyed by flowing water.",
                                 (state) -> (state.getBlock() instanceof FluidBlock) ?
-                                        GetsFlushedValue.NOT_APPLICABLE :
-                                                Arrays.asList(
-                                                        FluidFillable.class,
-                                                        DoorBlock.class,
-                                                        AbstractSignBlock.class
-                                                ).contains(state.getBlock().getClass()) ||
-                                                Arrays.asList(
-                                                        Blocks.LADDER,
-                                                        Blocks.SUGAR_CANE,
-                                                        Blocks.BUBBLE_COLUMN
-                                                ).contains(state.getBlock()) ||
-                                                Arrays.asList(
-                                                        Material.PORTAL,
-                                                        Material.STRUCTURE_VOID,
-                                                        Material.UNDERWATER_PLANT,
-                                                        Material.REPLACEABLE_UNDERWATER_PLANT
-                                                ).contains(state.getMaterial()) ||
-                                                state.getMaterial().blocksMovement() ?
-                                                        GetsFlushedValue.FALSE :
-                                                                GetsFlushedValue.TRUE,
+                                        "Not Applicable" :
+                                        !Arrays.asList(
+                                                FluidFillable.class,
+                                                DoorBlock.class,
+                                                AbstractSignBlock.class
+                                        ).contains(state.getBlock().getClass()) &&
+                                        !Arrays.asList(
+                                                Blocks.LADDER,
+                                                Blocks.SUGAR_CANE,
+                                                Blocks.BUBBLE_COLUMN
+                                        ).contains(state.getBlock()) &&
+                                        !Arrays.asList(
+                                                Material.PORTAL,
+                                                Material.STRUCTURE_VOID,
+                                                Material.UNDERWATER_PLANT,
+                                                Material.REPLACEABLE_UNDERWATER_PLANT
+                                        ).contains(state.getMaterial()) &&
+                                        !state.getMaterial().blocksMovement(),
                                 blockStates
                         ).toString()
                 )
@@ -498,12 +482,12 @@ public abstract class BlockStateTraits {
             if (Modifier.isStatic(staticField.getModifiers())) {
                 try {
                     @SuppressWarnings("unchecked")
-                    TagKey<Block> value = (TagKey<Block>) staticField.get(null);
+                    TagKey<Block> tag = (TagKey<Block>) staticField.get(null);
                     arr.add(new JoaProperty<>(
                             "tag_" + staticField.getName().toLowerCase(),
                             "Tag: " + staticField.getName(),
                             "" + staticField.getName(),
-                            (state) -> state.isIn(value),
+                            (state) -> state.isIn(tag),
                             // (state) -> state.isIn(BlockTags.NEEDS_IRON_TOOL),
                             blockStates
                     ).toString());
