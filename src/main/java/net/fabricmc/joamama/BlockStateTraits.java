@@ -5,6 +5,7 @@ import net.fabricmc.joamama.mixin.FireBlockAccessor;
 import net.fabricmc.joamama.mock.MockBlockView;
 import net.fabricmc.joamama.mock.MockWorldView;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.Instrument;
 import net.minecraft.block.enums.WireConnection;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.EntityType;
@@ -33,7 +34,7 @@ public abstract class BlockStateTraits {
     private static final Map<Material, String> materialMap = new HashMap<>();
     private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
-
+    
     static {
         blockStates = new Vector<>();
     }
@@ -74,7 +75,6 @@ public abstract class BlockStateTraits {
 
         return new ArrayList<>(
                 List.of(
-
                         new JoaProperty<>(
                                 "hardness",
                                 "Hardness",
@@ -444,7 +444,7 @@ public abstract class BlockStateTraits {
                                 "waterloggable",
                                 "Waterloggable",
                                 "Whether this block can be waterlogged.",
-                                (state) -> state.getBlock() instanceof Waterloggable ? true : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? "Inherent" : false,
+                                (state) -> state.getBlock() instanceof Waterloggable ? "Yes" : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? "Inherent" : "No",
                                 blockStates
                         ).toString(),
 
@@ -471,6 +471,34 @@ public abstract class BlockStateTraits {
                                                 Material.REPLACEABLE_UNDERWATER_PLANT
                                         ).contains(state.getMaterial()) &&
                                         !state.getMaterial().blocksMovement(),
+                                blockStates
+                        ).toString(),
+
+                        new JoaProperty<>(
+                                "note_block_instrument",
+                                "Note Block Instrument",
+                                "",
+                                (state) -> {
+                                    String str = (Arrays.asList(
+                                        Blocks.BLACK_WOOL,
+                                        Blocks.BLUE_WOOL,
+                                        Blocks.BROWN_WOOL,
+                                        Blocks.CYAN_WOOL,
+                                        Blocks.GRAY_WOOL,
+                                        Blocks.GREEN_WOOL,
+                                        Blocks.LIGHT_BLUE_WOOL,
+                                        Blocks.LIGHT_GRAY_WOOL,
+                                        Blocks.LIME_WOOL,
+                                        Blocks.MAGENTA_WOOL,
+                                        Blocks.ORANGE_WOOL,
+                                        Blocks.PINK_WOOL,
+                                        Blocks.PURPLE_WOOL,
+                                        Blocks.RED_WOOL,
+                                        Blocks.WHITE_WOOL,
+                                        Blocks.YELLOW_WOOL
+                                    ).contains(state.getBlock()) ? Instrument.GUITAR : Instrument.fromBelowState(state)).asString();
+                                    return str.substring(0, 1).toUpperCase().substring(1);
+                                },
                                 blockStates
                         ).toString()
                 )
