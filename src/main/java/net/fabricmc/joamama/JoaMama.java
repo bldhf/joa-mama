@@ -32,9 +32,8 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
-		//BlockStateTraits.load(Registries.BLOCK);
-
-		//output.addAll(BlockStateTraits.getTheWholeThing());
+		BlockStateTraits.load(Registries.BLOCK);
+		output.addAll(BlockStateTraits.getTheWholeThing());
 
 		save();
 	}
@@ -44,10 +43,10 @@ public class JoaMama implements ModInitializer {
 
 		//addBlockTagProperties(output, BlockTags.class);
 
-		EntityStateManager.load(world);
-		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
-		EntityTraits.load(Registries.ENTITY_TYPE);
-		output.addAll(EntityTraits.getTheWholeThing());
+		//EntityStateManager.load(world);
+		//EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
+		//EntityTraits.load(Registries.ENTITY_TYPE);
+		//output.addAll(EntityTraits.getTheWholeThing());
 
 		//BiomeTraits.load(biomes);
 		//output.addAll(BiomeTraits.getTheWholeThing());
