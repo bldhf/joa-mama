@@ -90,7 +90,7 @@ public abstract class EntityTraits {
                                 "can_be_ridden_in_water",
                                 "Can Be Ridden In Water",
                                 "",
-                                Entity::canBeRiddenInWater,
+                                entity -> !entity.shouldDismountUnderwater(),
                                 entityStates
                         ).toString(),
                         new StateTrait<>(

@@ -33,6 +33,7 @@ public class JoaMama implements ModInitializer {
 
 	@Override
 	public void onInitialize () {
+		LOGGER.info("onInitialize called");
 		BlockStateTraits.load(Registries.BLOCK);
 		output.addAll(BlockStateTraits.getTheWholeThing());
 
@@ -41,9 +42,9 @@ public class JoaMama implements ModInitializer {
 
 	public static void onWorldLoadOrSumthn (IntegratedServer server, ServerWorld world, Registry<Biome> biomes, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
 //	public static void onWorldLoadOrSumthn () {
-		LOGGER.info("YOOOOOOOOOOOOOOOOOOOOO");
+		LOGGER.info("World load mixin call successful!");
 
-		BlockStateTraits.addBlockTagProperties(output, BlockTags.class);
+//		BlockStateTraits.addBlockTagProperties(output, BlockTags.class);
 
 //		EntityStateManager.load(world);
 //		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);

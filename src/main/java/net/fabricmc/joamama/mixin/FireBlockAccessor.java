@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(FireBlock.class)
+@Mixin (FireBlock.class)
 public interface FireBlockAccessor {
     @Invoker
     int invokeGetBurnChance(BlockState state);
