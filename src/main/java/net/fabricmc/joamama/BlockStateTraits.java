@@ -1,13 +1,31 @@
 package net.fabricmc.joamama;
 
 import com.google.gson.JsonArray;
+import com.google.common.collect.*;
+import net.fabricmc.joamama.mixin.FireBlockAccessor;
+import net.fabricmc.joamama.mock.MockBlockView;
+import net.fabricmc.joamama.mock.MockWorldView;
 import net.minecraft.block.*;
+import net.minecraft.block.enums.Instrument;
+import net.minecraft.block.enums.WireConnection;
+import net.minecraft.block.piston.PistonBehavior;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnRestriction;
+import net.minecraft.fluid.*;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.state.property.EnumProperty;
+import net.minecraft.state.property.IntProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
+import net.minecraft.world.SpawnHelper;
+import net.minecraft.world.explosion.ExplosionBehavior;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -61,7 +79,6 @@ public abstract class BlockStateTraits {
 
         return new ArrayList<>(
                 List.of(
-
 //                        new JoaProperty<>(
 //                                "hardness",
 //                                "Hardness",
@@ -650,6 +667,33 @@ public abstract class BlockStateTraits {
 //                                blockStates
 //                        ).toString()
 
+                        new JoaProperty<>(
+                                "note_block_instrument",
+                                "Note Block Instrument",
+                                "",
+                                (state) -> {
+                                    String str = (Arrays.asList(
+                                            Blocks.BLACK_WOOL,
+                                            Blocks.BLUE_WOOL,
+                                            Blocks.BROWN_WOOL,
+                                            Blocks.CYAN_WOOL,
+                                            Blocks.GRAY_WOOL,
+                                            Blocks.GREEN_WOOL,
+                                            Blocks.LIGHT_BLUE_WOOL,
+                                            Blocks.LIGHT_GRAY_WOOL,
+                                            Blocks.LIME_WOOL,
+                                            Blocks.MAGENTA_WOOL,
+                                            Blocks.ORANGE_WOOL,
+                                            Blocks.PINK_WOOL,
+                                            Blocks.PURPLE_WOOL,
+                                            Blocks.RED_WOOL,
+                                            Blocks.WHITE_WOOL,
+                                            Blocks.YELLOW_WOOL
+                                    ).contains(state.getBlock()) ? Instrument.GUITAR : Instrument.fromBelowState(state)).asString();
+                                    return str.substring(0, 1).toUpperCase().substring(1);
+                                },
+                                blockStates
+                        ).toString()
                 )
         );
     }
