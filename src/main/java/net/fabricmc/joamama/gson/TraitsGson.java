@@ -2,16 +2,15 @@ package net.fabricmc.joamama.gson;
 
 import com.google.common.collect.Table;
 import com.google.gson.*;
-import net.minecraft.entity.EntityGroup;
-
 import java.lang.reflect.Type;
 import java.util.Map;
+import net.minecraft.world.entity.MobType;
 
 public class TraitsGson {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Table.class, new TableSerializer())
             .registerTypeAdapter(Map.class, new MapSerializer())
-            .registerTypeAdapter(EntityGroup.class, new EntityGroupSerializer())
+            .registerTypeAdapter(MobType.class, new EntityGroupSerializer())
             .excludeFieldsWithoutExposeAnnotation()
             .disableHtmlEscaping()
             .setPrettyPrinting()
@@ -21,14 +20,14 @@ public class TraitsGson {
         return gson;
     }
 
-    private static class EntityGroupSerializer implements JsonSerializer<EntityGroup> {
-        public JsonElement serialize (EntityGroup source, Type type, JsonSerializationContext context) {
+    private static class EntityGroupSerializer implements JsonSerializer<MobType> {
+        public JsonElement serialize (MobType source, Type type, JsonSerializationContext context) {
             String str = "NONE";
-            if (source == EntityGroup.DEFAULT) str = "DEFAULT";
-            else if (source == EntityGroup.UNDEAD) str = "UNDEAD";
-            else if (source == EntityGroup.ARTHROPOD) str = "ARTHROPOD";
-            else if (source == EntityGroup.ILLAGER) str = "ILLAGER";
-            else if (source == EntityGroup.AQUATIC) str = "AQUATIC";
+            if (source == MobType.UNDEFINED) str = "DEFAULT";
+            else if (source == MobType.UNDEAD) str = "UNDEAD";
+            else if (source == MobType.ARTHROPOD) str = "ARTHROPOD";
+            else if (source == MobType.ILLAGER) str = "ILLAGER";
+            else if (source == MobType.WATER) str = "AQUATIC";
             return context.serialize(str);
         }
     }

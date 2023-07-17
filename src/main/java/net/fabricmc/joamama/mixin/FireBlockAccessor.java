@@ -1,9 +1,8 @@
 package net.fabricmc.joamama.mixin;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FireBlock;
+import net.minecraft.world.level.block.FireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -11,9 +10,9 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin (FireBlock.class)
 public interface FireBlockAccessor {
     @Invoker
-    int invokeGetBurnChance(BlockState state);
+    int invokeGetBurnOdds(BlockState state);
 
     @Invoker
-    int invokeGetSpreadChance(BlockState state);
+    int invokeGetIgniteOdds(BlockState state);
 
 }

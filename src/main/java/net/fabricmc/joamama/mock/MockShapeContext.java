@@ -1,25 +1,25 @@
 package net.fabricmc.joamama.mock;
 
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.item.Item;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public record MockShapeContext (boolean descending, boolean isAbove, boolean isHolding, boolean canWalkOnFluid) implements ShapeContext {
-    public static ShapeContext absent() { return ShapeContext.absent(); }
+public record MockShapeContext (boolean descending, boolean isAbove, boolean isHolding, boolean canWalkOnFluid) implements CollisionContext {
+    public static CollisionContext empty() { return CollisionContext.empty(); }
 
-    public static ShapeContext of(Entity entity) {
-        return ShapeContext.of(entity);
+    public static CollisionContext of(Entity entity) {
+        return CollisionContext.of(entity);
     }
 
     public boolean isDescending() { return descending; }
 
     public boolean isAbove(VoxelShape var1, BlockPos var2, boolean var3) { return isAbove; }
 
-    public boolean isHolding(Item var1) { return isHolding; }
+    public boolean isHoldingItem(Item var1) { return isHolding; }
 
-    public boolean canWalkOnFluid(FluidState var1, FluidState var2) { return canWalkOnFluid; }
+    public boolean canStandOnFluid(FluidState var1, FluidState var2) { return canWalkOnFluid; }
 
 }

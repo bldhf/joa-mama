@@ -1,16 +1,16 @@
 package net.fabricmc.joamama.mixin;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SpreadableBlock;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.SpreadingSnowyDirtBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin (SpreadableBlock.class)
+@Mixin (SpreadingSnowyDirtBlock.class)
 public interface SpreadableBlockAccessor {
     @Invoker
-    static boolean invokeCanSurvive(BlockState state, WorldView world, BlockPos pos) {
+    static boolean invokeCanBeGrass(BlockState state, LevelReader world, BlockPos pos) {
         return false;
     }
 }

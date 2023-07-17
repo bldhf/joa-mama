@@ -1,9 +1,8 @@
 package net.fabricmc.joamama.entity;
 
-import net.minecraft.entity.EntityPose;
-import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.StringRepresentable;
 
-public enum Pose implements StringIdentifiable {
+public enum Pose implements StringRepresentable {
     STANDING ("standing"),
     FALL_FLYING ("fall_flying"),
     SLEEPING ("sleeping"),
@@ -26,15 +25,15 @@ public enum Pose implements StringIdentifiable {
         this.name = name;
     }
 
-    public EntityPose toEntityPose () {
-        return EntityPose.values()[this.ordinal()];
+    public net.minecraft.world.entity.Pose toEntityPose () {
+        return net.minecraft.world.entity.Pose.values()[this.ordinal()];
     }
     
     public String toString () {
-        return this.asString();
+        return this.getSerializedName();
     }
     
-    public String asString () {
+    public String getSerializedName () {
         return this.name;
     }
 }

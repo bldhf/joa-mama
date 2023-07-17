@@ -1,19 +1,18 @@
 package net.fabricmc.joamama.entity;
 
 import net.fabricmc.joamama.SimpleStateManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.PiglinEntity;
-import net.minecraft.entity.mob.SlimeEntity;
-import net.minecraft.entity.mob.ZoglinEntity;
-import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.entity.passive.AbstractHorseEntity;
-import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.state.property.Property;
-import net.minecraft.world.World;
-
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.Zoglin;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.piglin.Piglin;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.properties.Property;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,19 +34,19 @@ public class EntityStateManager {
         return new EntityStateManager(type, entityProperties.get(type));
     }
 
-    public static void load (World world) {
+    public static void load (Level world) {
         entityProperties = new HashMap<>();
-        for (EntityType<?> type : Registries.ENTITY_TYPE) {
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             entityProperties.put(type, new HashSet<>());
             if (type == EntityType.PLAYER) continue;
             Entity entity = type.create(world);
-            if (entity instanceof PassiveEntity || entity instanceof PiglinEntity || entity instanceof ZoglinEntity || entity instanceof ZombieEntity) {
+            if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                 entityProperties.get(type).add(EntityProperties.IS_BABY);
             }
-            if (entity instanceof SlimeEntity) {
+            if (entity instanceof Slime) {
                 entityProperties.get(type).add(EntityProperties.SLIME_SIZE);
             }
-            if (entity instanceof AbstractHorseEntity || entity instanceof TameableEntity) {
+            if (entity instanceof AbstractHorse || entity instanceof TamableAnimal) {
                 entityProperties.get(type).add(EntityProperties.IS_TAMED);
             }
         }

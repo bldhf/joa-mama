@@ -9,9 +9,10 @@
     "FireBlockAccessor",
     "FlowableFluidAccessor",
     "IntegratedServerAccessor",
-    "RedstoneWireBlockAccessor",
+    "RedStoneWireBlockAccessor",
     "ReloadMixin",
-    "SpreadableBlockAccessor"
+    "SpreadableBlockAccessor",
+    "DefaultDispenseItemBehavior_insaneBehaviors"
   ],
   "client": [],
   "injectors": {

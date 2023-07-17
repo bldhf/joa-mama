@@ -2,28 +2,25 @@ package net.fabricmc.joamama.entity;
 
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.SimpleState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.recipebook.ClientRecipeBook;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.*;
-import net.minecraft.entity.boss.WitherEntity;
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.decoration.*;
-import net.minecraft.entity.decoration.painting.PaintingEntity;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.*;
-import net.minecraft.entity.projectile.*;
-import net.minecraft.entity.projectile.thrown.*;
-import net.minecraft.entity.vehicle.*;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.stat.StatHandler;
-import net.minecraft.state.property.Property;
-import net.minecraft.world.World;
-
+import net.minecraft.client.ClientRecipeBook;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.stats.StatsCounter;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.Zoglin;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.piglin.Piglin;
+import net.minecraft.world.level.block.state.properties.Property;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,21 +62,21 @@ public class EntityState {
         toEntity.put(type, state -> rule.apply(state, create.apply(state)));
     }
 
-    public static void load (IntegratedServer server, ServerWorld world, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
+    public static void load (IntegratedServer server, ServerLevel world, Minecraft client, ClientLevel clientWorld, ClientPacketListener networkHandler, StatsCounter stats, ClientRecipeBook recipeBook) {
         toEntity = new HashMap<>();
-        for (EntityType<?> type : Registries.ENTITY_TYPE) {
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
-                registerType(EntityType.PLAYER, state -> new ClientPlayerEntity(client, clientWorld, networkHandler, stats, recipeBook, false, false));
+                registerType(EntityType.PLAYER, state -> new LocalPlayer(client, clientWorld, networkHandler, stats, recipeBook, false, false));
             } else {
                 registerType(type, state -> type.create(world));
                 Entity entity = type.create(world);
-                if (entity instanceof PassiveEntity || entity instanceof PiglinEntity || entity instanceof ZoglinEntity || entity instanceof ZombieEntity) {
+                if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                     registerRule(type, EntityProperties::setIsBaby);
                 }
-                if (entity instanceof SlimeEntity) {
+                if (entity instanceof Slime) {
                     registerRule(type, EntityProperties::setSize);
                 }
-                if (entity instanceof AbstractHorseEntity || entity instanceof TameableEntity) {
+                if (entity instanceof AbstractHorse || entity instanceof TamableAnimal) {
                     registerRule(type, EntityProperties::setIsTamed);
                 }
             }

@@ -1,11 +1,11 @@
 package net.fabricmc.joamama;
 
-import net.minecraft.state.property.Property;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import net.minecraft.world.level.block.state.properties.Property;
 
 public class SimpleState {
     private final Map<Property<?>, Comparable<?>> entries;

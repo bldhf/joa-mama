@@ -1,31 +1,32 @@
 package net.fabricmc.joamama;
 
 import com.google.gson.JsonArray;
-import com.google.common.collect.*;
+import com.google.gson.JsonObject;
 import net.fabricmc.joamama.mixin.FireBlockAccessor;
+import net.fabricmc.joamama.mixin.FlowableFluidAccessor;
+import net.fabricmc.joamama.mixin.RedStoneWireBlockAccessor;
+import net.fabricmc.joamama.mixin.SpreadableBlockAccessor;
 import net.fabricmc.joamama.mock.MockBlockView;
+import net.fabricmc.joamama.mock.MockShapeContext;
 import net.fabricmc.joamama.mock.MockWorldView;
-import net.minecraft.block.*;
-import net.minecraft.block.enums.Instrument;
-import net.minecraft.block.enums.WireConnection;
-import net.minecraft.block.piston.PistonBehavior;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnRestriction;
-import net.minecraft.fluid.*;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.SpawnHelper;
-import net.minecraft.world.explosion.ExplosionBehavior;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -35,8 +36,8 @@ import java.util.stream.Stream;
 @SuppressWarnings("UnusedReturnValue")
 public abstract class BlockStateTraits {
     private static final Vector<BlockState> blockStates;
-    private static final Map<Material, String> materialMap = new HashMap<>();
-    private static final Map<MapColor, String> mapColorMap = new HashMap<>();
+//    private static final Map<Material, String> materialMap = new HashMap<>();
+//    private static final Map<MaterialColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
 
     static {
@@ -44,14 +45,14 @@ public abstract class BlockStateTraits {
     }
 
     public static void load (Iterable<Block> blocks) {
-        blocks.forEach(block -> blockStates.addAll(block.getStateManager().getStates()));
+        blocks.forEach(block -> blockStates.addAll(block.getStateDefinition().getPossibleStates()));
 
         // Fill the lookup maps
-        setupClassNames(Material.class, materialMap);
-        setupClassNames(MapColor.class, mapColorMap);
+//        setupClassNames(Material.class, materialMap);
+//        setupClassNames(MaterialColor.class, mapColorMap);
         setupClassNames(BlockTags.class, blockTags, true);
-        System.out.println(materialMap);
-        System.out.println(mapColorMap);
+//        System.out.println(materialMap);
+//        System.out.println(mapColorMap);
         System.out.println(blockTags);
 
     }
@@ -83,7 +84,7 @@ public abstract class BlockStateTraits {
 //                                "hardness",
 //                                "Hardness",
 //                                "Determines how fast the block can be mined",
-//                                (state) -> state.getHardness(new MockBlockView(state), BlockPos.ORIGIN),
+//                                (state) -> state.getDestroySpeed(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
@@ -91,7 +92,7 @@ public abstract class BlockStateTraits {
 //                                "blast_resistance",
 //                                "Blast Resistance",
 //                                "Determines how likely this block is to break from exposure to an explosion",
-//                                (state) -> state.getBlock().getBlastResistance(),
+//                                (state) -> state.getBlock().getExplosionResistance(),
 //                                // (state) -> state.isAir() && state.getFluidState().isEmpty() ? Optional.empty() : Optional.of(Math.max(state.getBlock().getBlastResistance(), state.getFluidState().getBlastResistance())),
 //                                blockStates
 //                        ).toString(),
@@ -100,79 +101,15 @@ public abstract class BlockStateTraits {
 //                                "luminance",
 //                                "Luminance",
 //                                "",
-//                                AbstractBlock.AbstractBlockState::getLuminance,
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material",
-//                                "Material",
-//                                "",
-//                                (state) -> materialMap.get(state.getMaterial()),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_is_liquid",
-//                                "Material isLiquid()",
-//                                "",
-//                                (state) -> state.getMaterial().isLiquid(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_is_solid",
-//                                "Material isSolid()",
-//                                "",
-//                                (state) -> state.getMaterial().isSolid(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_blocks_movement",
-//                                "Material blocksMovement()",
-//                                "",
-//                                (state) -> state.getMaterial().blocksMovement(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_is_burnable",
-//                                "Material isBurnable()",
-//                                "",
-//                                (state) -> state.getMaterial().isBurnable(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_is_replaceable",
-//                                "Material isReplaceable()",
-//                                "",
-//                                (state) -> state.getMaterial().isReplaceable(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "material_blocks_light",
-//                                "Material blocksLight()",
-//                                "",
-//                                (state) -> state.getMaterial().blocksLight(),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "map_color",
-//                                "Map Color",
-//                                "",
-//                                (state) -> mapColorMap.get(state.getMapColor(new MockBlockView(state), BlockPos.ORIGIN)),
+//                                BlockBehaviour.BlockStateBase::getLightEmission,
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
 //                                "opaque",
 //                                "Opaque",
-//                                "",
-//                                AbstractBlock.AbstractBlockState::isOpaque,
+//                                "Whether the block is visually opaque. Used solely in rendering.",
+//                                BlockBehaviour.BlockStateBase::canOcclude,
 //                                blockStates
 //                        ).toString(),
 //
@@ -180,7 +117,7 @@ public abstract class BlockStateTraits {
 //                                "movable",
 //                                "Movable",
 //                                "Whether it can be pushed by a piston, stops the piston from extending, or whether attempting to push it destroys the block.",
-//                                state -> switch (state.getPistonBehavior()) {
+//                                state -> switch (state.getPistonPushReaction()) {
 //                                    case NORMAL, PUSH_ONLY -> "Yes";
 //                                    case BLOCK -> "No";
 //                                    case DESTROY -> "Breaks";
@@ -193,7 +130,7 @@ public abstract class BlockStateTraits {
 //                                "sticky",
 //                                "Sticky",
 //                                "If the block can be pulled by a sticky piston or an adjacent slime/honey block.</p><p>Slime and honey are listed as 'partially' as they are not sticky when pulled by one another.",
-//                                state -> switch (state.getPistonBehavior()) {
+//                                state -> switch (state.getPistonPushReaction()) {
 //                                    case NORMAL -> "Yes";
 //                                    case BLOCK, DESTROY, PUSH_ONLY -> "No";
 //                                    case IGNORE -> null;
@@ -204,8 +141,8 @@ public abstract class BlockStateTraits {
 //                        new JoaProperty<>(
 //                                "gets_random_ticked",
 //                                "Gets Random Ticked",
-//                                "",
-//                                AbstractBlock.AbstractBlockState::hasRandomTicks,
+//                                "Whether the block gets affected by random ticks.",
+//                                BlockBehaviour.BlockStateBase::isRandomlyTicking,
 //                                blockStates
 //                        ).toString(),
 //
@@ -213,7 +150,7 @@ public abstract class BlockStateTraits {
 //                                "flammable",
 //                                "Flammable",
 //                                "",
-//                                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnChance(state) > 0,
+//                                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnOdds(state) > 0,
 //                                blockStates
 //                        ).toString(),
 //
@@ -221,7 +158,7 @@ public abstract class BlockStateTraits {
 //                                "burn_odds",
 //                                "Burn Odds",
 //                                "The higher the burn odds, the quicker a block burns away (when on fire). 0 means it is non-flammable.",
-//                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetBurnChance,
+//                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetBurnOdds,
 //                                blockStates
 //                        ).toString(),
 //
@@ -229,7 +166,7 @@ public abstract class BlockStateTraits {
 //                                "ignite_odds",
 //                                "Ignite Odds",
 //                                "The higher the ignite odds, the more likely a block is to catch fire (if it is able to spread there).",
-//                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetSpreadChance,
+//                                ((FireBlockAccessor) Blocks.FIRE)::invokeGetIgniteOdds,
 //                                blockStates
 //                        ).toString(),
 //
@@ -237,31 +174,31 @@ public abstract class BlockStateTraits {
 //                                "gets_random_ticked",
 //                                "Gets Random Ticked",
 //                                "",
-//                                AbstractBlock.AbstractBlockState::hasRandomTicks,
+//                                BlockBehaviour.BlockStateBase::isRandomlyTicking,
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "conductivity",
-//                                "Conductivity",
-//                                "",
-//                                (state) -> state.isSolidBlock(new MockBlockView(state), BlockPos.ORIGIN),
+//                                "conductive",
+//                                "Conductive",
+//                                "Whether or not a redstone component can be powered through this block.",
+//                                (state) -> state.isRedstoneConductor(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
 //                                "suffocates_mobs",
 //                                "Suffocates Mobs",
-//                                "",
-//                                (state) -> state.shouldSuffocate(new MockBlockView(state), BlockPos.ORIGIN),
+//                                "Whether a mob or player should suffocate in this block.",
+//                                (state) -> state.isSuffocating(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
 //                                "opacity",
 //                                "Opacity",
-//                                "",
-//                                (state) -> state.getOpacity(new MockBlockView(state), BlockPos.ORIGIN),
+//                                "How much light the block... blocks.",
+//                                (state) -> state.getLightBlock(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
@@ -269,7 +206,7 @@ public abstract class BlockStateTraits {
 //                                "is_opaque_full_cube",
 //                                "Is Opaque Full Cube",
 //                                "",
-//                                (state) -> state.isOpaqueFullCube(new MockBlockView(state), BlockPos.ORIGIN),
+//                                (state) -> state.isSolidRender(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
@@ -277,7 +214,7 @@ public abstract class BlockStateTraits {
 //                                "bottom_face_has_full_square",
 //                                "Bottom Face Has Full Square",
 //                                "This is true if the bottom face is a full square.",
-//                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.DOWN),
+//                                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockView(state), BlockPos.ZERO), Direction.DOWN),
 //                                blockStates
 //                        ).toString(),
 //
@@ -285,7 +222,7 @@ public abstract class BlockStateTraits {
 //                                "top_face_has_full_square",
 //                                "Top Face Has Full Square",
 //                                "This is true if the top face is a full square.",
-//                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.UP),
+//                                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockView(state), BlockPos.ZERO), Direction.UP),
 //                                blockStates
 //                        ).toString(),
 //
@@ -293,7 +230,7 @@ public abstract class BlockStateTraits {
 //                                "side_face_has_full_square",
 //                                "Side Face Has Full Square (Notrh)",
 //                                "This is true if the north face has a full, square surface.",
-//                                (state) -> Block.isFaceFullSquare(state.getCollisionShape(new MockBlockView(state), BlockPos.ORIGIN), Direction.NORTH),
+//                                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockView(state), BlockPos.ZERO), Direction.NORTH),
 //                                blockStates
 //                        ).toString(),
 //
@@ -301,7 +238,7 @@ public abstract class BlockStateTraits {
 //                                "top_face_has_rim",
 //                                "Top Face Has Rim",
 //                                "This is true if the top face contains a 2 pixel wide ring going around its edge",
-//                                (state) -> Block.hasTopRim(new MockBlockView(state), BlockPos.ORIGIN),
+//                                (state) -> Block.canSupportRigidBlock(new MockBlockView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
@@ -309,7 +246,7 @@ public abstract class BlockStateTraits {
 //                                "bottom_face_has_small_square",
 //                                "Bottom Face Has Small Square",
 //                                "This is true if the bottom face contains a square of length 2 at its center.",
-//                                (state) -> Block.sideCoversSmallSquare(new MockWorldView(state), BlockPos.ORIGIN, Direction.DOWN),
+//                                (state) -> Block.canSupportCenter(new MockWorldView(state), BlockPos.ZERO, Direction.DOWN),
 //                                blockStates
 //                        ).toString(),
 //
@@ -317,7 +254,7 @@ public abstract class BlockStateTraits {
 //                                "top_face_has_small_square",
 //                                "Top Face Has Small Square",
 //                                "This is true if the top face contains a square of length 2 at its center.",
-//                                (state) -> Block.sideCoversSmallSquare(new MockWorldView(state), BlockPos.ORIGIN, Direction.UP),
+//                                (state) -> Block.canSupportCenter(new MockWorldView(state), BlockPos.ZERO, Direction.UP),
 //                                blockStates
 //                        ).toString(),
 //
@@ -325,7 +262,7 @@ public abstract class BlockStateTraits {
 //                                "bottom_face_has_collision",
 //                                "Bottom Face Has Collision",
 //                                "This is true if the bottom side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.DOWN).isEmpty(),
+//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ZERO).getFaceShape(Direction.DOWN).isEmpty(),
 //                                blockStates
 //                        ).toString(),
 //
@@ -333,7 +270,7 @@ public abstract class BlockStateTraits {
 //                                "top_face_has_collision",
 //                                "Top Face Has Collision",
 //                                "This is true if the top side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.UP).isEmpty(),
+//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ZERO).getFaceShape(Direction.UP).isEmpty(),
 //                                blockStates
 //                        ).toString(),
 //
@@ -341,23 +278,31 @@ public abstract class BlockStateTraits {
 //                                "side_face_has_collision",
 //                                "Side Face Has Collision (North)",
 //                                "This is true if the north side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ORIGIN).getFace(Direction.NORTH).isEmpty(),
+//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ZERO).getFaceShape(Direction.NORTH).isEmpty(),
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "has_collision",
+//                                "Has Collision",
+//                                "Whether the block has any solid collision box.",
+//                                (state) -> !state.getCollisionShape(new MockWorldView(state), BlockPos.ZERO).isEmpty(),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
 //                                "redirects_redstone",
 //                                "Redirects Redstone Wire (North)",
-//                                "This is true if the North side connects to/redirects adjacent redstone dust",
-//                                (state) -> RedstoneWireBlock.connectsTo(state, Direction.SOUTH), // uses an accesswidener, the direction is reversed so the "perspective" makes sense.
+//                                "This is true if the North side connects to/redirects adjacent redstone dust.",
+//                                (state) -> RedStoneWireBlockAccessor.invokeShouldConnectTo(state, Direction.SOUTH), // the direction is reversed so the "perspective" makes sense.
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
 //                                "connects_to_panes",
 //                                "Connects To Panes (North)",
-//                                "Whether a glass pane block will connect to this block",
-//                                (state) -> ((PaneBlock) Blocks.GLASS_PANE).connectsTo(state, state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH)),
+//                                "Whether a glass pane block will connect to this block.",
+//                                (state) -> ((IronBarsBlock) Blocks.GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockView(state), BlockPos.ZERO, Direction.NORTH)),
 //                                blockStates
 //                        ).toString(),
 //
@@ -366,18 +311,7 @@ public abstract class BlockStateTraits {
 //                                "Blocks Beacon Beam",
 //                                "Whether placing this block above a beacon will prevent its beam from forming, or stop its current one.",
 //                                // net/minecraft/block/entity/BeaconBlockEntity.java:150
-//                                (state) -> !( state.getOpacity(new MockBlockView(state), BlockPos.ORIGIN) < 15 || state.isOf(Blocks.BEDROCK) ),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "obstructs_cactus",
-//                                "Obstructs Cactus",
-//                                "Whether placing this block next to cactus destroys it.",
-//                                (state) -> (
-//                                        state.getMaterial().isSolid() ||
-//                                        Arrays.<Fluid>asList(Fluids.LAVA, Fluids.LAVA).contains(state.getFluidState().getFluid())
-//                                ),
+//                                (state) -> !( state.getLightBlock(new MockBlockView(state), BlockPos.ZERO) < 15 || state.is(Blocks.BEDROCK) ),
 //                                blockStates
 //                        ).toString(),
 //
@@ -400,39 +334,31 @@ public abstract class BlockStateTraits {
 //                                "full_cube",
 //                                "Full Cube",
 //                                "Whether the block has a normal cube shape and has full block collision on all sides.",
-//                                (state) -> state.isFullCube(new MockWorldView(state), BlockPos.ORIGIN),
+//                                (state) -> state.isCollisionShapeFullBlock(new MockWorldView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "occlusion_shape",
-//                                "Occlusion Shape",
-//                                "Used in rendering",
-//                                (state) -> state.isFullCube(new MockWorldView(state), BlockPos.ORIGIN),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "bottom_face_has_solid_full_square",
-//                                "Bottom Face Has Solid Full Square",
+//                                "bottom_face_has_full_square",
+//                                "Bottom Face Has Full Square",
 //                                "This is true if the bottom face is a full square.",
-//                                (state) -> state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.DOWN),
+//                                (state) -> state.isFaceSturdy(new MockBlockView(state), BlockPos.ZERO, Direction.DOWN),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "top_face_has_solid_full_square",
-//                                "Top Face Has Solid Full Square",
+//                                "top_face_has_full_square",
+//                                "Top Face Has Full Square",
 //                                "This is true if the top face is a full square.",
-//                                (state) -> state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.UP),
+//                                (state) -> state.isFaceSturdy(new MockBlockView(state), BlockPos.ZERO, Direction.UP),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "side_face_has_solid_full_square",
-//                                "Side Face Has Solid Full Square (North)",
+//                                "side_face_has_full_square",
+//                                "Side Face Has Full Square (North)",
 //                                "This is true if the north face is a full square.",
-//                                (state) -> state.isSideSolidFullSquare(new MockBlockView(state), BlockPos.ORIGIN, Direction.NORTH),
+//                                (state) -> state.isFaceSturdy(new MockBlockView(state), BlockPos.ZERO, Direction.NORTH),
 //                                blockStates
 //                        ).toString(),
 //
@@ -440,7 +366,7 @@ public abstract class BlockStateTraits {
 //                                "waterloggable",
 //                                "Waterloggable",
 //                                "Whether this block can be waterlogged.",
-//                                (state) -> state.getBlock() instanceof Waterloggable ? true : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getFluid()) ? "Inherent" : false,
+//                                (state) -> state.getBlock() instanceof SimpleWaterloggedBlock ? true : Arrays.<Fluid>asList(Fluids.WATER, Fluids.FLOWING_WATER).contains(state.getFluidState().getType()) ? "Inherent" : false,
 //                                blockStates
 //                        ).toString(),
 //
@@ -448,7 +374,7 @@ public abstract class BlockStateTraits {
 //                                "supports_redstone_dust",
 //                                "Supports Redstone Dust",
 //                                "Whether redstone dust (\"wire\") can be placed on top of this block.",
-//                                (state) -> ((RedstoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanRunOnTop(new MockWorldView(state), BlockPos.ORIGIN, state),
+//                                (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockWorldView(state), BlockPos.ZERO, state),
 //                                blockStates
 //                        ).toString(),
 //
@@ -456,24 +382,24 @@ public abstract class BlockStateTraits {
 //                                "gets_flushed",
 //                                "Gets Flushed",
 //                                "Whether this block will get destroyed by flowing water or lava.",
-//                                (state) -> ((FlowableFluidAccessor) Fluids.WATER).invokeCanFlow(
+//                                (state) -> ((FlowableFluidAccessor) Fluids.WATER).invokeCanSpreadTo(
 //                                        new MockWorldView(state),
-//                                        BlockPos.ORIGIN,
-//                                        Blocks.WATER.getDefaultState(),
+//                                        BlockPos.ZERO,
+//                                        Blocks.WATER.defaultBlockState(),
 //                                        Direction.NORTH,
-//                                        BlockPos.ORIGIN.north(),
+//                                        BlockPos.ZERO.north(),
 //                                        state,
 //                                        state.getFluidState(),
 //                                        Fluids.WATER
-//                                    ) && !(state.getBlock() instanceof Waterloggable),
+//                                    ) && !(state.getBlock() instanceof SimpleWaterloggedBlock),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "emits_redstone_power",
-//                                "Emits Redstone Power",
-//                                "What it says on the tin.",
-//                                AbstractBlock.AbstractBlockState::emitsRedstonePower,
+//                                "emits_power",
+//                                "Emits Power",
+//                                "Whether this block can emit redstone signals.",
+//                                BlockBehaviour.BlockStateBase::isSignalSource,
 //                                blockStates
 //                        ).toString(),
 //
@@ -481,34 +407,26 @@ public abstract class BlockStateTraits {
 //                                "kills_grass",
 //                                "Kills Grass",
 //                                "Whether grass will die when placed underneath.",
-//                                (state) -> !SpreadableBlockAccessor.invokeCanSurvive(state, new MockWorldView(state), BlockPos.ORIGIN),
+//                                (state) -> !SpreadableBlockAccessor.invokeCanBeGrass(state, new MockWorldView(state), BlockPos.ZERO),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "as_item",
-//                                "As Item",
-//                                "This block in item form.",
-//                                (state) -> !Objects.equals(state.getBlock().asItem().getName().getString(), "Air"),
+//                                "exists_as_item",
+//                                "Exists As Item",
+//                                "Whether this block has a direct item-equivalent.",
+//                                (state) -> !Objects.equals(state.getBlock().asItem().getDescription().getString(), "Air"),
 //                                blockStates
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "ticking_tile_entity",
-//                                "Ticking Tile Entity",
-//                                "",
-//                                state -> state.getBlockEntityTicker(world, Registries.BLOCK_ENTITY_TYPE.get(new Identifier(state.getBlock().toString()))),
-//                                blockStates
-//                        ).toString(),
-//
-//                        new JoaProperty<>(
-//                                "ticking_block_entity",
-//                                "Ticking Block Entity",
+//                                "block_entity",
+//                                "Block Entity",
 //                                "",
 //                                state -> {
-//                                    if(state.getBlock() instanceof BlockEntityProvider) {
+//                                    if(state.getBlock() instanceof EntityBlock) {
 //                                        try {
-//                                            return state.getBlock().getClass().getMethod("getTicker", World.class, BlockState.class, BlockEntityType.class).getDeclaringClass() != BlockEntityProvider.class
+//                                            return state.getBlock().getClass().getMethod("getTicker", Level.class, BlockState.class, BlockEntityType.class).getDeclaringClass() != EntityBlock.class
 //                                                    ? "Ticking"
 //                                                    : "Non-Ticking";
 //                                        } catch (NoSuchMethodException e) {
@@ -520,23 +438,23 @@ public abstract class BlockStateTraits {
 //                                blockStates
 //                        ).toString(),
 //
-//                        new JoaProperty<>(
-//                                "block_entity",
-//                                "Block Entity",
-//                                "",
-//                                AbstractBlock.AbstractBlockState::hasBlockEntity,
-//                                blockStates
-//                        ).toString(),
-
+////                        new JoaProperty<>(
+////                                "block_entity",
+////                                "Block Entity",
+////                                "",
+////                                BlockBehaviour.BlockStateBase::hasBlockEntity,
+////                                blockStates
+////                        ).toString(),
+//
 //                        new JoaProperty<>(
 //                                "height_all",
 //                                "Height (All)",
 //                                "The block's upwards-facing collision surfaces.</p><p>Includes internal collisions.</p><p>Defaults to pixel values, this can be converted in the settings.</p>",
 //                                (state) -> state.getCollisionShape(
 //                                        new MockBlockView(state),
-//                                        BlockPos.ORIGIN,
+//                                        BlockPos.ZERO,
 //                                        new MockShapeContext(false, true, true, true)
-//                                ).getBoundingBoxes().stream().map(box -> box.maxY * 16).distinct().toArray(),
+//                                ).toAabbs().stream().map(box -> box.maxY * 16).distinct().toArray(),
 //                                blockStates
 //                        ).toString(),
 //
@@ -551,9 +469,9 @@ public abstract class BlockStateTraits {
 //                                            jsonArrayFromStream(
 //                                                    state.getCollisionShape(
 //                                                            new MockBlockView(state),
-//                                                            BlockPos.ORIGIN,
+//                                                            BlockPos.ZERO,
 //                                                            new MockShapeContext(true, true, true, true)
-//                                                    ).getBoundingBoxes().stream().map(box -> (1 - box.minZ) * 16).distinct()
+//                                                    ).toAabbs().stream().map(box -> (1 - box.minZ) * 16).distinct()
 //                                            )
 //                                    );
 //                                    obj.add(
@@ -561,9 +479,9 @@ public abstract class BlockStateTraits {
 //                                            jsonArrayFromStream(
 //                                                    state.getCollisionShape(
 //                                                            new MockBlockView(state),
-//                                                            BlockPos.ORIGIN,
+//                                                            BlockPos.ZERO,
 //                                                            new MockShapeContext(true, true, true, true)
-//                                                    ).getBoundingBoxes().stream().map(box -> box.maxZ * 16).distinct()
+//                                                    ).toAabbs().stream().map(box -> box.maxZ * 16).distinct()
 //                                            )
 //                                    );
 //                                    obj.add(
@@ -571,9 +489,9 @@ public abstract class BlockStateTraits {
 //                                            jsonArrayFromStream(
 //                                                    state.getCollisionShape(
 //                                                            new MockBlockView(state),
-//                                                            BlockPos.ORIGIN,
+//                                                            BlockPos.ZERO,
 //                                                            new MockShapeContext(true, true, true, true)
-//                                                    ).getBoundingBoxes().stream().map(box -> (1 - box.minX) * 16).distinct()
+//                                                    ).toAabbs().stream().map(box -> (1 - box.minX) * 16).distinct()
 //                                            )
 //                                    );
 //                                    obj.add(
@@ -581,9 +499,9 @@ public abstract class BlockStateTraits {
 //                                            jsonArrayFromStream(
 //                                                    state.getCollisionShape(
 //                                                            new MockBlockView(state),
-//                                                            BlockPos.ORIGIN,
+//                                                            BlockPos.ZERO,
 //                                                            new MockShapeContext(true, true, true, true)
-//                                                    ).getBoundingBoxes().stream().map(box -> box.maxX * 16).distinct()
+//                                                    ).toAabbs().stream().map(box -> box.maxX * 16).distinct()
 //                                            )
 //                                    );
 //                                    return obj;
@@ -597,103 +515,153 @@ public abstract class BlockStateTraits {
 //                                "The block's upwards-facing collision surfaces.</p><p>Includes internal collisions.</p><p>Defaults to pixel values, this can be converted in the settings.</p>",
 //                                (state) -> state.getCollisionShape(
 //                                        new MockBlockView(state),
-//                                        BlockPos.ORIGIN,
+//                                        BlockPos.ZERO,
 //                                        new MockShapeContext(true, true, true, true)
-//                                    ).getBoundingBoxes().stream().map(box -> (1 - box.minY) * 16).distinct().toArray(),
-//                                blockStates
-//                        ).toString(),
-
-//                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
-//                        new JoaProperty<>(
-//                                "instant_shape_updater",
-//                                "Instant Shape Updater",
-//                                "",
-//                                (state) -> {
-//                                    try {
-//                                        Class<?> declaringClass = state.getBlock().getClass().getMethod("getStateForNeighborUpdate", BlockState.class, Direction.class, BlockState.class, WorldAccess.class, BlockPos.class, BlockPos.class).getDeclaringClass();
-//                                        if(declaringClass == AbstractBlock.class) return false;
-//                                        List<Class<?>> instantDeclaringClasses = List.of(AbstractBlock.class, AbstractPressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralBlock.class, CoralFanBlock.class, CoralParentBlock.class, CoralWallFanBlock.class, DeadCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, FluidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, HangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceGrowthBlock.class, MushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, PaneBlock.class, PistonHeadBlock.class, PlantBlock.class, PropaguleBlock.class, RedstoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, SignBlock.class, SnowBlock.class, SnowyBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairsBlock.class, TallPlantBlock.class, TorchBlock.class, TripwireBlock.class, TripwireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, WallMountedBlock.class, WallRedstoneTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
-//                                        return instantDeclaringClasses.contains(declaringClass);
-//
-//                                    } catch (NoSuchMethodException e) {
-//                                        e.printStackTrace();
-//                                        return "No such method";
-//                                    }
-//                                },
+//                                    ).toAabbs().stream().map(box -> (1 - box.minY) * 16).distinct().toArray(),
 //                                blockStates
 //                        ).toString(),
 //
-//                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
+////                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
+////                        new JoaProperty<>(
+////                                "instant_shape_updater",
+////                                "Instant Shape Updater",
+////                                "",
+////                                (state) -> {
+////                                    try {
+////                                        Class<?> declaringClass = state.getBlock().getClass().getMethod("getStateForNeighborUpdate", BlockState.class, Direction.class, BlockState.class, LevelAccessor.class, BlockPos.class, BlockPos.class).getDeclaringClass();
+////                                        if(declaringClass == BlockBehaviour.class) return false;
+////                                        List<Class<?>> instantDeclaringClasses = List.of(BlockBehaviour.class, BasePressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralPlantBlock.class, CoralFanBlock.class, BaseCoralPlantTypeBlock.class, CoralWallFanBlock.class, BaseCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, LiquidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, CeilingHangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceBlock.class, HugeMushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, IronBarsBlock.class, PistonHeadBlock.class, BushBlock.class, MangrovePropaguleBlock.class, RedStoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, StandingSignBlock.class, SnowLayerBlock.class, SnowyDirtBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairBlock.class, DoublePlantBlock.class, TorchBlock.class, TripWireBlock.class, TripWireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, FaceAttachedHorizontalDirectionalBlock.class, RedstoneWallTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
+////                                        return instantDeclaringClasses.contains(declaringClass);
+////
+////                                    } catch (NoSuchMethodException e) {
+////                                        e.printStackTrace();
+////                                        return "No such method";
+////                                    }
+////                                },
+////                                blockStates
+////                        ).toString(),
+////
+////                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
+////                        new JoaProperty<>(
+////                                "instant_block_updater",
+////                                "Instant Block Updater",
+////                                "",
+////                                (state) -> {
+////                                    try {
+////                                        Class<?> declaringClass = state.getBlock().getClass().getMethod("neighborUpdate", BlockState.class, Level.class, BlockPos.class, Block.class, BlockPos.class, boolean.class).getDeclaringClass();
+////                                        if(declaringClass == BlockBehaviour.class) return false;
+////                                        List<Class<?>> instantDeclaringClasses = List.of(BaseRailBlock.class, DiodeBlock.class, BellBlock.class, BigDripleafBlock.class, DoorBlock.class, FenceGateBlock.class, LiquidBlock.class, FrostedIceBlock.class, HopperBlock.class, NoteBlock.class, PistonBaseBlock.class, PistonHeadBlock.class, RedStoneWireBlock.class, SpongeBlock.class, StructureBlock.class, TntBlock.class, TrapDoorBlock.class, DispenserBlock.class, RedstoneLampBlock.class);
+////                                        return instantDeclaringClasses.contains(declaringClass);
+////
+////                                    } catch (NoSuchMethodException e) {
+////                                        e.printStackTrace();
+////                                        return "No such method";
+////                                    }
+////                                },
+////                                blockStates
+////                        ).toString(),
+////
+////                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
+////                        new JoaProperty<>(
+////                                "instant_updater",
+////                                "Instant Updater",
+////                                "",
+////                                (state) -> {
+////                                    try {
+////                                        Class<?> blockDeclaringClass = state.getBlock().getClass().getMethod("neighborUpdate", BlockState.class, Level.class, BlockPos.class, Block.class, BlockPos.class, boolean.class).getDeclaringClass();
+////                                        List<Class<?>> instantBlockUpdateDeclaringClasses = List.of(BaseRailBlock.class, DiodeBlock.class, BellBlock.class, BigDripleafBlock.class, DoorBlock.class, FenceGateBlock.class, LiquidBlock.class, FrostedIceBlock.class, HopperBlock.class, NoteBlock.class, PistonBaseBlock.class, PistonHeadBlock.class, RedStoneWireBlock.class, SpongeBlock.class, StructureBlock.class, TntBlock.class, TrapDoorBlock.class, DispenserBlock.class, RedstoneLampBlock.class);
+////
+////                                        Class<?> shapeDeclaringClass = state.getBlock().getClass().getMethod("getStateForNeighborUpdate", BlockState.class, Direction.class, BlockState.class, LevelAccessor.class, BlockPos.class, BlockPos.class).getDeclaringClass();
+////                                        List<Class<?>> instantShapeUpdateDeclaringClasses = List.of(BasePressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralPlantBlock.class, CoralFanBlock.class, BaseCoralPlantTypeBlock.class, CoralWallFanBlock.class, BaseCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, LiquidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, CeilingHangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceBlock.class, HugeMushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, IronBarsBlock.class, PistonHeadBlock.class, BushBlock.class, MangrovePropaguleBlock.class, RedStoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, StandingSignBlock.class, SnowLayerBlock.class, SnowyDirtBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairBlock.class, DoublePlantBlock.class, TorchBlock.class, TripWireBlock.class, TripWireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, FaceAttachedHorizontalDirectionalBlock.class, RedstoneWallTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
+////
+////                                        if(blockDeclaringClass == BlockBehaviour.class && shapeDeclaringClass == BlockBehaviour.class) return false;
+////                                        return instantBlockUpdateDeclaringClasses.contains(blockDeclaringClass) || instantShapeUpdateDeclaringClasses.contains(shapeDeclaringClass);
+////
+////                                    } catch (NoSuchMethodException e) {
+////                                        e.printStackTrace();
+////                                        return "No such method";
+////                                    }
+////                                },
+////                                blockStates
+////                        ).toString(),
 //                        new JoaProperty<>(
-//                                "instant_block_updater",
-//                                "Instant Block Updater",
+//                                "block_render_type",
+//                                "Block Render Type",
 //                                "",
-//                                (state) -> {
-//                                    try {
-//                                        Class<?> declaringClass = state.getBlock().getClass().getMethod("neighborUpdate", BlockState.class, World.class, BlockPos.class, Block.class, BlockPos.class, boolean.class).getDeclaringClass();
-//                                        if(declaringClass == AbstractBlock.class) return false;
-//                                        List<Class<?>> instantDeclaringClasses = List.of(AbstractRailBlock.class, AbstractRedstoneGateBlock.class, BellBlock.class, BigDripleafBlock.class, DoorBlock.class, FenceGateBlock.class, FluidBlock.class, FrostedIceBlock.class, HopperBlock.class, NoteBlock.class, PistonBlock.class, PistonHeadBlock.class, RedstoneWireBlock.class, SpongeBlock.class, StructureBlock.class, TntBlock.class, TrapdoorBlock.class, DispenserBlock.class, RedstoneLampBlock.class);
-//                                        return instantDeclaringClasses.contains(declaringClass);
-//
-//                                    } catch (NoSuchMethodException e) {
-//                                        e.printStackTrace();
-//                                        return "No such method";
-//                                    }
-//                                },
+//                                (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString(),
 //                                blockStates
 //                        ).toString(),
-//
-//                        // None of these are actually reliable ways to find what updates instantly, but it's a nice starting point
 //                        new JoaProperty<>(
-//                                "instant_updater",
-//                                "Instant Updater",
+//                                "fluid_render_type",
+//                                "Fluid Render Type",
 //                                "",
-//                                (state) -> {
-//                                    try {
-//                                        Class<?> blockDeclaringClass = state.getBlock().getClass().getMethod("neighborUpdate", BlockState.class, World.class, BlockPos.class, Block.class, BlockPos.class, boolean.class).getDeclaringClass();
-//                                        List<Class<?>> instantBlockUpdateDeclaringClasses = List.of(AbstractRailBlock.class, AbstractRedstoneGateBlock.class, BellBlock.class, BigDripleafBlock.class, DoorBlock.class, FenceGateBlock.class, FluidBlock.class, FrostedIceBlock.class, HopperBlock.class, NoteBlock.class, PistonBlock.class, PistonHeadBlock.class, RedstoneWireBlock.class, SpongeBlock.class, StructureBlock.class, TntBlock.class, TrapdoorBlock.class, DispenserBlock.class, RedstoneLampBlock.class);
-//
-//                                        Class<?> shapeDeclaringClass = state.getBlock().getClass().getMethod("getStateForNeighborUpdate", BlockState.class, Direction.class, BlockState.class, WorldAccess.class, BlockPos.class, BlockPos.class).getDeclaringClass();
-//                                        List<Class<?>> instantShapeUpdateDeclaringClasses = List.of(AbstractPressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralBlock.class, CoralFanBlock.class, CoralParentBlock.class, CoralWallFanBlock.class, DeadCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, FluidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, HangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceGrowthBlock.class, MushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, PaneBlock.class, PistonHeadBlock.class, PlantBlock.class, PropaguleBlock.class, RedstoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, SignBlock.class, SnowBlock.class, SnowyBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairsBlock.class, TallPlantBlock.class, TorchBlock.class, TripwireBlock.class, TripwireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, WallMountedBlock.class, WallRedstoneTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
-//
-//                                        if(blockDeclaringClass == AbstractBlock.class && shapeDeclaringClass == AbstractBlock.class) return false;
-//                                        return instantBlockUpdateDeclaringClasses.contains(blockDeclaringClass) || instantShapeUpdateDeclaringClasses.contains(shapeDeclaringClass);
-//
-//                                    } catch (NoSuchMethodException e) {
-//                                        e.printStackTrace();
-//                                        return "No such method";
-//                                    }
-//                                },
+//                                (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString(),
 //                                blockStates
 //                        ).toString()
-
-                        new JoaProperty<>(
-                                "note_block_instrument",
-                                "Note Block Instrument",
-                                "",
-                                (state) -> {
-                                    String str = (Arrays.asList(
-                                            Blocks.BLACK_WOOL,
-                                            Blocks.BLUE_WOOL,
-                                            Blocks.BROWN_WOOL,
-                                            Blocks.CYAN_WOOL,
-                                            Blocks.GRAY_WOOL,
-                                            Blocks.GREEN_WOOL,
-                                            Blocks.LIGHT_BLUE_WOOL,
-                                            Blocks.LIGHT_GRAY_WOOL,
-                                            Blocks.LIME_WOOL,
-                                            Blocks.MAGENTA_WOOL,
-                                            Blocks.ORANGE_WOOL,
-                                            Blocks.PINK_WOOL,
-                                            Blocks.PURPLE_WOOL,
-                                            Blocks.RED_WOOL,
-                                            Blocks.WHITE_WOOL,
-                                            Blocks.YELLOW_WOOL
-                                    ).contains(state.getBlock()) ? Instrument.GUITAR : Instrument.fromBelowState(state)).asString();
-                                    return str.substring(0, 1).toUpperCase().substring(1);
-                                },
-                                blockStates
-                        ).toString()
+//
+//
+//                        new JoaProperty<>(
+//                                "blocks_skylight",
+//                                "Blocks Skylight",
+//                                "",
+//                                (state) -> !state.propagatesSkylightDown(new MockBlockView(state), BlockPos.ZERO),
+//                                blockStates
+//                        ).toString(),
+//                        new JoaProperty<>(
+//                                "note_block_instrument",
+//                                "Note Block Instrument",
+//                                "Which instrument a noteblock will play if placed above this block.",
+//                                (state) -> state.instrument().toString(),
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "solid",
+//                                "(Deprecated) Solid",
+//                                "blockState.isSolid",
+//                                (state) -> state.isSolid(),
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "blocks_motion",
+//                                "(Deprecated) Blocks Motion",
+//                                "blockState.blocksMotion()",
+//                                (state) -> state.blocksMotion(),
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "ignited_by_lava",
+//                                "Ignited By Lava",
+//                                "",
+//                                BlockBehaviour.BlockStateBase::ignitedByLava,
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "replaceable",
+//                                "Replaceable",
+//                                "",
+//                                BlockBehaviour.BlockStateBase::canBeReplaced,
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "obstructs_cactus",
+//                                "Obstructs Cactus",
+//                                "",
+//                                (state) -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA),
+//                                blockStates
+//                        ).toString(),
+//
+//                        new JoaProperty<>(
+//                                "get_map_color",
+//                                "(Deprecated) getMapColor",
+//                                "blockState.()",
+//                                (state) -> state.getMapColor(new MockBlockView(state), BlockPos.ZERO).toString(),
+//                                blockStates
+//                        ).toString()
                 )
         );
     }
@@ -708,7 +676,7 @@ public abstract class BlockStateTraits {
                             "tag_" + staticField.getName().toLowerCase(),
                             "Tag: " + staticField.getName(),
                             "" + staticField.getName(),
-                            (state) -> state.isIn(tag),
+                            (state) -> state.is(tag),
                             // (state) -> state.isIn(BlockTags.NEEDS_IRON_TOOL),
                             blockStates
                     ).toString());

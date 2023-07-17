@@ -5,17 +5,17 @@ import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.entity.EntityStateManager;
 import net.fabricmc.joamama.entity.EntityTraits;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.recipebook.ClientRecipeBook;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.stat.StatHandler;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.client.ClientRecipeBook;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.stats.StatsCounter;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.biome.Biome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,22 +34,22 @@ public class JoaMama implements ModInitializer {
 	@Override
 	public void onInitialize () {
 		LOGGER.info("onInitialize called");
-		BlockStateTraits.load(Registries.BLOCK);
-		output.addAll(BlockStateTraits.getTheWholeThing());
+//		BlockStateTraits.load(BuiltInRegistries.BLOCK);
+//		output.addAll(BlockStateTraits.getTheWholeThing());
 
 		save();
 	}
 
-	public static void onWorldLoadOrSumthn (IntegratedServer server, ServerWorld world, Registry<Biome> biomes, MinecraftClient client, ClientWorld clientWorld, ClientPlayNetworkHandler networkHandler, StatHandler stats, ClientRecipeBook recipeBook) {
+	public static void onWorldLoadOrSumthn (IntegratedServer server, ServerLevel world, Registry<Biome> biomes, Minecraft client, ClientLevel clientWorld, ClientPacketListener networkHandler, StatsCounter stats, ClientRecipeBook recipeBook) {
 //	public static void onWorldLoadOrSumthn () {
 		LOGGER.info("World load mixin call successful!");
 
 //		BlockStateTraits.addBlockTagProperties(output, BlockTags.class);
 
-//		EntityStateManager.load(world);
-//		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
-//		EntityTraits.load(Registries.ENTITY_TYPE);
-//		output.addAll(EntityTraits.getTheWholeThing());
+		EntityStateManager.load(world);
+		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
+		EntityTraits.load(BuiltInRegistries.ENTITY_TYPE);
+		output.addAll(EntityTraits.getTheWholeThing());
 
 //		BiomeTraits.load(biomes);
 //		output.addAll(BiomeTraits.getTheWholeThing());

@@ -9,10 +9,9 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.gson.TraitsGson;
-import net.minecraft.entity.Entity;
-import net.minecraft.state.State;
-import net.minecraft.state.property.Property;
-
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.StateHolder;
+import net.minecraft.world.level.block.state.properties.Property;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -38,18 +37,17 @@ public class StateTrait<O, T> {
         this.entries = null;
     }
 
-    public <S extends State<O, S>> StateTrait (String id, String name, String desc, BiFunction<O, S, T> func, SetMultimap<O, S> entries) {
+    public <S extends StateHolder<O, S>> StateTrait (String id, String name, String desc, BiFunction<O, S, T> func, SetMultimap<O, S> entries) {
         this.id = id;
         this.name = name;
         this.desc = desc;
         this.entries = HashBasedTable.create();
-        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), func.apply(owner, state)));
+        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getValues()), func.apply(owner, state)));
 
         this.simplify();
     }
 
     public StateTrait (String id, String name, String desc, Function<Entity, T> func, SetMultimap<O, EntityState> entries) {
-        JoaMama.LOGGER.error(id);
         this.id = id;
         this.name = name;
         this.desc = desc;

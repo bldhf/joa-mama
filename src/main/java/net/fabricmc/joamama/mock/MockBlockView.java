@@ -1,13 +1,13 @@
 package net.fabricmc.joamama.mock;
 
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 
-public record MockBlockView (BlockState state) implements BlockView {
+public record MockBlockView (BlockState state) implements BlockGetter {
     public BlockEntity getBlockEntity (BlockPos pos) {
         return null;
     }
@@ -26,7 +26,7 @@ public record MockBlockView (BlockState state) implements BlockView {
     }
 
     @Deprecated
-    public int getBottomY () {
+    public int getMinBuildHeight () {
         throw new AssertionError();
     }
 }

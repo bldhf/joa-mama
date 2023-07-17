@@ -1,2 +1,0 @@
-accessWidener   v1  named
-accessible method net/minecraft/block/RedstoneWireBlock connectsTo (Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;)Z
