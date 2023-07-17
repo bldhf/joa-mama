@@ -7,8 +7,11 @@
     "BlockMixin",
     "EntityTypeAccessor",
     "FireBlockAccessor",
+    "FlowableFluidAccessor",
     "IntegratedServerAccessor",
-    "ReloadMixin"
+    "RedstoneWireBlockAccessor",
+    "ReloadMixin",
+    "SpreadableBlockAccessor"
   ],
   "client": [],
   "injectors": {
