@@ -11,8 +11,7 @@
     "IntegratedServerAccessor",
     "RedStoneWireBlockAccessor",
     "ReloadMixin",
-    "SpreadableBlockAccessor",
-    "DefaultDispenseItemBehavior_insaneBehaviors"
+    "SpreadableBlockAccessor"
   ],
   "client": [],
   "injectors": {
