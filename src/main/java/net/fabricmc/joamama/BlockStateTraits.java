@@ -9,6 +9,7 @@ import net.fabricmc.joamama.mixin.SpreadableBlockAccessor;
 import net.fabricmc.joamama.mock.MockBlockView;
 import net.fabricmc.joamama.mock.MockShapeContext;
 import net.fabricmc.joamama.mock.MockWorldView;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
@@ -16,28 +17,28 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.IronBarsBlock;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.MapColor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("UnusedReturnValue")
 public abstract class BlockStateTraits {
     private static final Vector<BlockState> blockStates;
 //    private static final Map<Material, String> materialMap = new HashMap<>();
-//    private static final Map<MaterialColor, String> mapColorMap = new HashMap<>();
+    private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
 
     static {
@@ -49,11 +50,11 @@ public abstract class BlockStateTraits {
 
         // Fill the lookup maps
 //        setupClassNames(Material.class, materialMap);
-//        setupClassNames(MaterialColor.class, mapColorMap);
+        setupClassNames(MapColor.class, mapColorMap);
         setupClassNames(BlockTags.class, blockTags, true);
 //        System.out.println(materialMap);
-//        System.out.println(mapColorMap);
-        System.out.println(blockTags);
+        JoaMama.LOGGER.info(mapColorMap.toString());
+        JoaMama.LOGGER.info(blockTags.toString());
 
     }
 
@@ -74,6 +75,7 @@ public abstract class BlockStateTraits {
                 }
             }
         }
+        JoaMama.LOGGER.info(map.toString());
     }
 
     public static ArrayList<String> getTheWholeThing () {
@@ -608,8 +610,8 @@ public abstract class BlockStateTraits {
 //                                blockStates
 //                        ).toString(),
 //                        new JoaProperty<>(
-//                                "note_block_instrument",
-//                                "Note Block Instrument",
+//                                "instrument",
+//                                "Instrument",
 //                                "Which instrument a noteblock will play if placed above this block.",
 //                                (state) -> state.instrument().toString(),
 //                                blockStates
@@ -656,35 +658,120 @@ public abstract class BlockStateTraits {
 //                        ).toString(),
 //
 //                        new JoaProperty<>(
-//                                "get_map_color",
-//                                "(Deprecated) getMapColor",
-//                                "blockState.()",
-//                                (state) -> state.getMapColor(new MockBlockView(state), BlockPos.ZERO).toString(),
+//                                "map_color",
+//                                "Map Color",
+//                                "",
+//                                (state) -> "{{mapColor|" + mapColorMap.get(state.getMapColor(new MockBlockView(state), BlockPos.ZERO)) + "}}",
 //                                blockStates
-//                        ).toString()
+//                        ).toString(),
+
+// //                     new JoaProperty<>(
+// //                             "falling_block",
+// //                             "Falling Block (unfinished: scaffolding and dripstone wrong)",
+// //                             "",
+// //                             (state) -> state.getBlock() instanceof Fallable,
+// //                             blockStates
+// //                     ).toString(),
+
+                        new JoaProperty<>(
+                                "map_color",
+                                "Map Color",
+                                "",
+                                BlockBehaviour.BlockStateBase::hasAnalogOutputSignal,
+                                blockStates
+                        ).toString()
+
                 )
         );
     }
 
     public static <T> void addBlockTagProperties(ArrayList<String> arr, Class<T> clazz) {
-        for (Field staticField : clazz.getDeclaredFields()) {
-            if (Modifier.isStatic(staticField.getModifiers())) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    TagKey<Block> tag = (TagKey<Block>) staticField.get(null);
-                    arr.add(new JoaProperty<>(
-                            "tag_" + staticField.getName().toLowerCase(),
-                            "Tag: " + staticField.getName(),
-                            "" + staticField.getName(),
-                            (state) -> state.is(tag),
-                            // (state) -> state.isIn(BlockTags.NEEDS_IRON_TOOL),
-                            blockStates
-                    ).toString());
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+//        for (Field staticField : clazz.getDeclaredFields()) {
+//            if (Modifier.isStatic(staticField.getModifiers())) {
+//                try {
+//                    @SuppressWarnings("unchecked")
+//                    TagKey<Block> tag = (TagKey<Block>) staticField.get(null);
+//                    arr.add(new JoaProperty<>(
+//                            "tag_" + staticField.getName().toLowerCase(),
+//                            "Tag: " + staticField.getName(),
+//                            "" + staticField.getName(),
+//                            (state) -> state.is(tag),
+//                            // (state) -> state.isIn(BlockTags.NEEDS_IRON_TOOL),
+//                            blockStates
+//                    ).toString());
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+
+//        arr.add(
+//                new JoaProperty<>(
+//                        "dragon_immune",
+//                        "Dragon Immune",
+//                        "Whether this block is immune to The Ender Dragon flying through it.",
+//                        (state) -> state.is(BlockTags.DRAGON_IMMUNE) || state.is(BlockTags.DRAGON_TRANSPARENT),
+//                        blockStates
+//                ).toString());
+//        arr.add(
+//                new JoaProperty<>(
+//                        "wither_blockbreak_immune",
+//                        "Wither Block Break Immune",
+//                        "Whether this block is immune to the wither's block breaking attack.",
+//                        (state) -> state.is(BlockTags.WITHER_IMMUNE) || state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BUBBLE_COLUMN,
+//                        blockStates
+//                ).toString());
+//        arr.add(
+//                new JoaProperty<>(
+//                        "wither_immune",
+//                        "Wither Skull Immune",
+//                        "Whether this block is immune to the wither's skull attack.",
+//                        (state) -> {
+//                            float expRes = Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance());
+//                            // net.minecraft.world.entity.projectile.WitherSkull.getBlockExplosionResistance
+//                            if (1.3 < 0.3*(0.3+expRes)) {
+//                                if (WitherBoss.canDestroy(state)) {
+//                                    return "Only to black skulls";
+//                                }
+//                                return "Yes";
+//                            }
+//                            return "No";
+//                        },
+//                        blockStates
+//                ).toString());
+
+//        var manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
+//        var blocksInStructures = manager.listTemplates()
+//                .map(rl -> manager.get(rl).orElseThrow())
+//                .flatMap(template -> {
+//                    try {
+//                        var palettesField = template.getClass().getDeclaredField("palettes");
+//                        palettesField.setAccessible(true);
+//                        var palettes = (List<StructureTemplate.Palette>) palettesField.get(template);
+//                        return palettes.stream()
+//                                .map(StructureTemplate.Palette::blocks)
+//                                .flatMap(blockInfos -> blockInfos
+//                                        .stream()
+//                                        .map(StructureTemplate.StructureBlockInfo::state)
+//                                        .map(BlockState::getBlock)
+//                                );
+//                    } catch (NoSuchFieldException e) {
+//                        System.out.println("Generates in structures: Fuck 1");
+//                    } catch (IllegalAccessException e) {
+//                        System.out.println("Generates in structures: Fuck 2");
+//                    }
+//                    return Stream.of();
+//                })
+//                .collect(Collectors.toUnmodifiableSet());
+//        arr.add(
+//                new JoaProperty<>(
+//                        "generates_in_structures",
+//                        "Generates in Structures",
+//                        "Based off of what blocks show up in the standard structure palletes. Does not include all complex structures.",
+//                        state -> blocksInStructures.contains(state.getBlock()),
+//                        blockStates
+//                ).toString()
+//        );
     }
 
     public static JsonArray jsonArrayFromStream(Stream<Double> arr) {
