@@ -1,7 +1,5 @@
 package net.fabricmc.joamama.mock;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,7 +22,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public record MockWorldView (BlockState state) implements LevelReader {
+public record MockLevelReader (BlockState state) implements LevelReader {
     @Deprecated
     public ChunkAccess getChunk (int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create) {
         throw new AssertionError();

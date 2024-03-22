@@ -12,7 +12,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public record MockCollisionView (BlockState state) implements CollisionGetter {
+public record MockCollisionGetter (BlockState state) implements CollisionGetter {
     @Deprecated
     public WorldBorder getWorldBorder () {
         throw new AssertionError();

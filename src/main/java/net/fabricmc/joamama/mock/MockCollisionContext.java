@@ -7,7 +7,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public record MockShapeContext (boolean descending, boolean isAbove, boolean isHolding, boolean canWalkOnFluid) implements CollisionContext {
+public record MockCollisionContext (boolean descending, boolean isAbove, boolean isHolding, boolean canWalkOnFluid) implements CollisionContext {
     public static CollisionContext empty() { return CollisionContext.empty(); }
 
     public static CollisionContext of(Entity entity) {

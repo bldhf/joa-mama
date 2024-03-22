@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
-public record MockBlockView (BlockState state) implements BlockGetter {
+public record MockBlockGetter (BlockState state) implements BlockGetter {
     public BlockEntity getBlockEntity (BlockPos pos) {
         return null;
     }
