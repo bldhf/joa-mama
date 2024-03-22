@@ -6,6 +6,7 @@ import net.fabricmc.joamama.mixin.FireBlockAccessor;
 import net.fabricmc.joamama.mixin.FlowableFluidAccessor;
 import net.fabricmc.joamama.mixin.RedStoneWireBlockAccessor;
 import net.fabricmc.joamama.mixin.SpreadableBlockAccessor;
+import net.fabricmc.joamama.mock.MockMultiBlockLevelReader;
 import net.minecraft.client.Minecraft;
 import net.fabricmc.joamama.mock.MockBlockGetter;
 import net.fabricmc.joamama.mock.MockCollisionContext;
@@ -326,20 +327,6 @@ public abstract class BlockStateTraits {
                                 "Whether placing this block above a beacon will prevent its beam from forming, or stop its current one.",
                                 // net/minecraft/block/entity/BeaconBlockEntity.java:150
                                 (state) -> !( state.getLightBlock(new MockBlockGetter(state), BlockPos.ZERO) < 15 || state.is(Blocks.BEDROCK) ),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
-                                "raid_spawnable",
-                                "Raid Spawnable",
-                                "Whether raids can spawn on this block.",
-                                (state) ->
-                                        NaturalSpawner.isSpawnPositionOk(
-                                                SpawnPlacements.Type.ON_GROUND,
-                                                new MockLevelReader(state),
-                                                BlockPos.ZERO.above(),
-                                                EntityType.RAVAGER
-                                        ) || state.is(Blocks.SNOW),
                                 blockStates
                         ).toString(),
 
@@ -666,14 +653,6 @@ public abstract class BlockStateTraits {
                         ).toString(),
 
                         new JoaProperty<>(
-                                "obstructs_cactus",
-                                "Obstructs Cactus",
-                                "Whether a cactus will be destroyed when adjacent to this block.",
-                                (state) -> state.isSolid() || isLava(state)),
-                                blockStates
-                        ).toString(),
-
-                        new JoaProperty<>(
                                 "get_map_color",
                                 "Map Color",
                                 "The map color of this block. Note that waterlogged blocks will have the map color of water.",
@@ -724,7 +703,7 @@ public abstract class BlockStateTraits {
                                 "spawnable_in",
                                 "Spawnable In",
                                 "Whether mobs can spawn in this block.",
-                                (state) -> state.getMapColor(new MockBlockGetter(state), BlockPos.ZERO).toString(),
+                                (state) -> "",
                                 blockStates
                         ).toString()
                 )
@@ -818,6 +797,43 @@ public abstract class BlockStateTraits {
 //                        blockStates
 //                ).toString()
 //        );
+//        arr.add(
+//                new JoaProperty<>(
+//                        "obstructs_cactus",
+//                        "Obstructs Cactus",
+//                        "",
+//                        state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA),
+//                        blockStates
+//                ).toString()
+//        );
+//        arr.add(
+//                new JoaProperty<>(
+//                        "obstructs_tree_growth",
+//                        "Obstructs Tree Growth",
+//                        "",
+//                        (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES),
+//                        blockStates
+//                ).toString()
+//        );
+        arr.add(
+                new JoaProperty<>(
+                        "raid_spawnable",
+                        "Raid Spawnable",
+                        "Whether raids can spawn on this block.",
+                        (state) ->
+                                NaturalSpawner.isSpawnPositionOk(
+                                        SpawnPlacements.Type.ON_GROUND,
+                                        new MockMultiBlockLevelReader(Map.of(
+                                                BlockPos.ZERO.above(),  Blocks.AIR.defaultBlockState(),
+                                                BlockPos.ZERO,          Blocks.AIR.defaultBlockState(),
+                                                BlockPos.ZERO.below(),  state
+                                        )),
+                                        BlockPos.ZERO,
+                                        EntityType.RAVAGER
+                                ) || state.is(Blocks.SNOW),
+                        blockStates
+                ).toString()
+        );
     }
 
     public static JsonArray jsonArrayFromStream(Stream<Double> arr) {
