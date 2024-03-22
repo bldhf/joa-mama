@@ -35,7 +35,7 @@ public class JoaMama implements ModInitializer {
 	public void onInitialize () {
 		LOGGER.info("onInitialize called");
 		BlockStateTraits.load(BuiltInRegistries.BLOCK);
-		output.addAll(BlockStateTraits.getTheWholeThing());
+		BlockStateTraits.getTheWholeThing(output);
 
 		save();
 	}
