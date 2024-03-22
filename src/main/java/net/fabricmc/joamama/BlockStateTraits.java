@@ -21,11 +21,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.NaturalSpawner;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.IronBarsBlock;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -679,7 +675,7 @@ public abstract class BlockStateTraits {
                                 "The map color of this block. Note that waterlogged blocks will have the map color of water.",
                                 (state) -> "{{mapColor|" + mapColorMap.get(state.getMapColor(new MockBlockView(state), BlockPos.ZERO)) + "}}",
                                 blockStates
-                        ).toString(),
+                        ).toString(),*/
                         
                         new JoaProperty<>(
                                "falling_block",
@@ -690,20 +686,20 @@ public abstract class BlockStateTraits {
                        ).toString(),
 
                        new JoaProperty<>(
-                                "unknown",
-                                "Unknown",
-                                "",
-                                BlockBehaviour.BlockStateBase::hasAnalogOutputSignal,
-                                blockStates
-                        ).toString()
+                               "unknown",
+                               "Unknown",
+                               "",
+                               BlockBehaviour.BlockStateBase::hasAnalogOutputSignal,
+                               blockStates
+                       ).toString()/*,
 
-                        new JoaProperty<>(
-                                "water_forms_source_above",
-                                "Water Forms Sources Above",
-                                "Whether water can form a source above this block.</p><p>If infinite lava is on, it will form sources above the same blocks, but above lava and not above water.",
-                                (state) -> state.isSolid() || isWaterSource(state),
-                                blockStates
-                        ).toString(),
+                       new JoaProperty<>(
+                               "water_forms_source_above",
+                               "Water Forms Sources Above",
+                               "Whether water can form a source above this block.</p><p>If infinite lava is on, it will form sources above the same blocks, but above lava and not above water.",
+                               (state) -> state.isSolid() || isWaterSource(state),
+                               blockStates
+                       ).toString(),
 
                         new JoaProperty<>(
                                 "spawnable",
@@ -718,7 +714,7 @@ public abstract class BlockStateTraits {
                                     //                                                                       B
                                 ),
                                 blockStates
-                        ).toString(),*/
+                        ).toString(),
 
                         new JoaProperty<>(
                                 "spawnable_in",
@@ -726,7 +722,7 @@ public abstract class BlockStateTraits {
                                 "Whether mobs can spawn in this block.",
                                 (state) -> state.getMapColor(new MockBlockGetter(state), BlockPos.ZERO).toString(),
                                 blockStates
-                        ).toString()
+                        ).toString()*/
                 )
         );
     }
