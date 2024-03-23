@@ -249,7 +249,7 @@ public abstract class BlockStateTraits {
         arr.add(new SimpleTrait<>(
                 "connects_to_panes",
                 "Connects To Panes (North)",
-                "Whether a glass pane block will connect to this block.",
+                "Whether a glass pane block to the north will connect to this block.",
                 (state) -> ((IronBarsBlock) Blocks.GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockGetter(state), BlockPos.ZERO, Direction.NORTH)),
                 blockStates));
         arr.add(new SimpleTrait<>(
@@ -652,11 +652,17 @@ public abstract class BlockStateTraits {
                 state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA),
                 blockStates));
         arr.add(new SimpleTrait<>(
-                        "obstructs_tree_growth",
-                        "Obstructs Tree Growth",
-                        "",
-                        (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES),
-                        blockStates));
+                "obstructs_tree_growth",
+                "Obstructs Tree Growth",
+                "",
+                (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES),
+                blockStates));
+        arr.add(new SimpleTrait<>(
+                "connects_to_walls",
+                "Connects To Walls (North)",
+                "Whether a wall block to the north will connect to this block.",
+                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH),
+                blockStates));
         arr.add(new SimpleTrait<>(
                 "raid_spawnable",
                 "Raid Spawnable",

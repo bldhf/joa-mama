@@ -11,7 +11,8 @@
     "IntegratedServerAccessor",
     "RedStoneWireBlockAccessor",
     "ReloadMixin",
-    "SpreadableBlockAccessor"
+    "SpreadableBlockAccessor",
+    "WallBlockAccessor"
   ],
   "client": [],
   "injectors": {
