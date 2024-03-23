@@ -249,7 +249,7 @@ public abstract class BlockStateTraits {
         arr.add(new JoaProperty<>(
                 "connects_to_panes",
                 "Connects To Panes (North)",
-                "Whether a glass pane block will connect to this block.",
+                "Whether a glass pane block to the north will connect to this block.",
                 (state) -> ((IronBarsBlock) Blocks.GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockGetter(state), BlockPos.ZERO, Direction.NORTH)),
                 blockStates).toString());
         arr.add(new JoaProperty<>(
@@ -663,11 +663,17 @@ public abstract class BlockStateTraits {
                 state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA),
                 blockStates).toString());
         arr.add(new JoaProperty<>(
-                        "obstructs_tree_growth",
-                        "Obstructs Tree Growth",
-                        "",
-                        (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES),
-                        blockStates).toString());
+                "obstructs_tree_growth",
+                "Obstructs Tree Growth",
+                "",
+                (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES),
+                blockStates).toString());
+        arr.add(new JoaProperty<>(
+                "connects_to_walls",
+                "Connects To Walls (North)",
+                "Whether a wall block to the north will connect to this block.",
+                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH),
+                blockStates).toString());
         arr.add(new JoaProperty<>(
                 "raid_spawnable",
                 "Raid Spawnable",

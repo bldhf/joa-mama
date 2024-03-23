@@ -6,9 +6,11 @@ import com.google.gson.annotations.SerializedName;
 import net.fabricmc.joamama.gson.TraitsGson;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.random.WeightedRandomList;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import java.util.ArrayList;
@@ -101,8 +103,8 @@ public abstract class BiomeTraits {
                                 "Default Precipitation",
                                 "The default precipitation type of this biome.",
                                 biome -> !biome.hasPrecipitation()
-                                    ? Biome.Precipitation.NONE
-                                    : biome.coldEnoughToSnow(BlockPos.ZERO) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN,
+                                    ? "None"
+                                    : biome.coldEnoughToSnow(BlockPos.ZERO) ? "Snow" : "Rain",
                                 biomes,
                                 biome -> String.valueOf(biomes.getId(biome))
                         ).toString(),
@@ -112,8 +114,8 @@ public abstract class BiomeTraits {
                                 "The approximate height at which it starts snowing. Though unlikely, this can fluctuate by up to 8 blocks.",
                                 biome -> switch (biome.getPrecipitationAt(BlockPos.ZERO)) {
                                     case NONE -> "N/A";
-                                    case SNOW -> "ALL";
-                                    case RAIN -> biome.getBaseTemperature() < 0.15 ? "ALL" : (int) (biome.getBaseTemperature() * 800 - 40);
+                                    case SNOW -> "All";
+                                    case RAIN -> biome.getBaseTemperature() < 0.15 ? "All" : (int) (biome.getBaseTemperature() * 800 - 40);
                                 },
                                 biomes,
                                 biome -> String.valueOf(biomes.getId(biome))
