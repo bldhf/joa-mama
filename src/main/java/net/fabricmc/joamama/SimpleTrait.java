@@ -1,7 +1,6 @@
 package net.fabricmc.joamama;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import net.fabricmc.joamama.gson.TraitsGson;
@@ -9,7 +8,7 @@ import net.fabricmc.joamama.gson.TraitsGson;
 import java.util.HashMap;
 import java.util.function.Function;
 
-public class JoaProperty <T, P> {
+public class SimpleTrait<T, P> implements Trait {
     private static final Gson gson;
     @Expose
     private final String id;
@@ -26,12 +25,12 @@ public class JoaProperty <T, P> {
         gson = TraitsGson.gson();
     }
 
-    private JoaProperty () {
+    private SimpleTrait() {
         this.id = this.name = this.desc = null;
         this.entries = null;
     }
 
-    public JoaProperty (String id, String name, String desc, Function<T, P> func, Iterable<T> entries) {
+    public SimpleTrait(String id, String name, String desc, Function<T, P> func, Iterable<T> entries) {
         this.id = id;
         this.name = name;
         this.desc = desc;
@@ -39,7 +38,7 @@ public class JoaProperty <T, P> {
         entries.forEach(entry -> this.entries.put(entry.toString(), func.apply(entry)));
     }
 
-    public JoaProperty (String id, String name, String desc, Function<T, P> func, Iterable<T> entries, Function<T, String> toString) {
+    public SimpleTrait(String id, String name, String desc, Function<T, P> func, Function<T, String> toString, Iterable<T> entries) {
         this.id = id;
         this.name = name;
         this.desc = desc;
@@ -49,5 +48,17 @@ public class JoaProperty <T, P> {
 
     public String toString () {
         return gson.toJson(this);
+    }
+
+    public String getId () {
+        return this.id;
+    }
+
+    public String getName () {
+        return this.name;
+    }
+
+    public String getDesc () {
+        return this.desc;
     }
 }

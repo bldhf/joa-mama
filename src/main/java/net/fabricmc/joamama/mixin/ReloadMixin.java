@@ -42,7 +42,7 @@ public abstract class ReloadMixin {
             StatsCounter stats = player.getStats();
             ClientRecipeBook recipeBook = player.getRecipeBook();
 
-            JoaMama.onWorldLoadOrSumthn(server, world, biomes, client, clientWorld, networkHandler, stats, recipeBook);
+            JoaMama.onReloadResources(server, world, biomes, client, clientWorld, networkHandler, stats, recipeBook);
         }
     }
 

@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class StateTrait<O, T> {
+public class StateTrait<O, T> implements Trait {
     private static final Gson GSON = TraitsGson.gson();
     @Expose
     private final String id;
@@ -59,6 +59,18 @@ public class StateTrait<O, T> {
 
     public String toString () {
         return GSON.toJson(this);
+    }
+
+    public String getId () {
+        return this.id;
+    }
+
+    public String getName () {
+        return this.name;
+    }
+
+    public String getDesc () {
+        return this.desc;
     }
 
     private T getTrait (O owner, SimpleState state) {
