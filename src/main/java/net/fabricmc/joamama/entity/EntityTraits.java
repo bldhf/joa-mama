@@ -30,6 +30,7 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
@@ -491,5 +492,11 @@ public abstract class EntityTraits {
                     return "err";
                 },
                 entityStates));
+        arr.add(new StateTrait<>(
+            "raider",
+            "Raider",
+            "Determines if this entity can join raids.",
+            entity -> entity instanceof Raider,
+            entityStates));
     }
 }
