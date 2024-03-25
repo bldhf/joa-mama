@@ -498,5 +498,11 @@ public abstract class EntityTraits {
             "Determines if this entity can join raids.",
             entity -> entity instanceof Raider,
             entityStates));
+        arr.add(new StateTrait<>(
+            "category",
+            "Mob Category",
+            "Determines what mob cap this entity uses when spawning.",
+            entity -> entity.getType().getCategory(),
+            entityStates));
     }
 }
