@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class EntityTraits {
-    private static final MobType EntityGroup_NONE = new MobType();
     private static final SetMultimap<EntityType<?>, EntityState> entityStates;
 
     static {
@@ -147,7 +146,17 @@ public abstract class EntityTraits {
                 "entity_group",
                 "Entity Group",
                 "",
-                entity -> entity instanceof LivingEntity ? ((LivingEntity) entity).getMobType() : EntityGroup_NONE,
+                entity -> {
+                    if (entity instanceof LivingEntity) {
+                        MobType mobType = ((LivingEntity) entity).getMobType();
+                        if (mobType == MobType.UNDEFINED) return "DEFAULT";
+                        else if (mobType == MobType.UNDEAD) return "UNDEAD";
+                        else if (mobType == MobType.ARTHROPOD) return "ARTHROPOD";
+                        else if (mobType == MobType.ILLAGER) return "ILLAGER";
+                        else if (mobType == MobType.WATER) return "AQUATIC";
+                    }
+                    return "NONE";
+                },
                 entityStates));
         arr.add(new StateTrait<>(
                 "eye_height",

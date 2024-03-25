@@ -10,7 +10,6 @@ public class TraitsGson {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Table.class, new TableSerializer())
             .registerTypeAdapter(Map.class, new MapSerializer())
-            .registerTypeAdapter(MobType.class, new EntityGroupSerializer())
             .excludeFieldsWithoutExposeAnnotation()
             .disableHtmlEscaping()
             .setPrettyPrinting()
@@ -18,18 +17,6 @@ public class TraitsGson {
 
     public static Gson gson () {
         return gson;
-    }
-
-    private static class EntityGroupSerializer implements JsonSerializer<MobType> {
-        public JsonElement serialize (MobType source, Type type, JsonSerializationContext context) {
-            String str = "NONE";
-            if (source == MobType.UNDEFINED) str = "DEFAULT";
-            else if (source == MobType.UNDEAD) str = "UNDEAD";
-            else if (source == MobType.ARTHROPOD) str = "ARTHROPOD";
-            else if (source == MobType.ILLAGER) str = "ILLAGER";
-            else if (source == MobType.WATER) str = "AQUATIC";
-            return context.serialize(str);
-        }
     }
 
     @SuppressWarnings("rawtypes")
