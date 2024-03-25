@@ -58,13 +58,13 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "width",
                 "Width",
-                "",
+                "The width of this entity. All entity hitboxes except for item frames and paintings have square horizontal cross-sections, so there is no distinction between length and width.",
                 Entity::getBbWidth,
                 entityStates));
         arr.add(new StateTrait<>(
                 "height",
                 "Height",
-                "",
+                "The height of this entity.",
                 Entity::getBbHeight,
                 entityStates));
         arr.add(new StateTrait<>(
@@ -76,49 +76,49 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "base_armor",
                 "Base Armor",
-                "The amount of armor points this has without wearing anything.",
+                "The amount of armor points this entity has without wearing anything.",
                 entity -> entity instanceof LivingEntity ? ((LivingEntity) entity).getArmorValue() : "N/A",
                 entityStates));
         arr.add(new StateTrait<>(
                 "base_attack_damage",
                 "Base Attack Damage",
-                "",
+                "The base attack damage of this entity.",
                 entity -> getAttributeValueIfPresent(entity, Attributes.ATTACK_DAMAGE),
                 entityStates));
         arr.add(new StateTrait<>(
                 "base_attack_knockback",
                 "Base Attack Knockback",
-                "",
+                "The base attack knockback of this entity",
                 entity -> getAttributeValueIfPresent(entity, Attributes.ATTACK_KNOCKBACK),
                 entityStates));
         arr.add(new StateTrait<>(
                 "bucketable",
                 "Bucketable",
-                "",
+                "Determines whether buckets can be used on this entity.",
                 entity -> entity instanceof Bucketable,
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_be_ridden_in_water",
                 "Can Be Ridden In Water",
-                "",
+                "Determines whether this entity will dismount its rider if it becomes completely submerged.",
                 entity -> !entity.dismountsUnderwater(),
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_be_saddled",
                 "Can Be Saddled",
-                "",
+                "Determines whether this entity can equip saddles.",
                 entity -> entity instanceof Saddleable && ((Saddleable) entity).isSaddleable(),
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_breathe_in_water",
-                "Can Breathe In Water",
-                "",
+                "Can Breathe Underwater",
+                "Determintes whether this entity can breathe underwater.",
                 entity -> entity instanceof LivingEntity && ((LivingEntity) entity).canBreatheUnderwater(),
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_open_doors",
                 "Can Open Doors",
-                "",
+                "Whether this entity can open doors.",
                 entity -> entity instanceof AbstractPiglin
                         || entity instanceof Villager
                         || entity instanceof Vindicator,
@@ -126,7 +126,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "can_ride_boat",
                 "Can Ride Boat",
-                "",
+                "Whether this entity will ride boats when pushed by them.",
                 entity -> entity.isPushable()
                         && entity.getBbWidth() < EntityType.BOAT.getWidth()
                         && entity instanceof LivingEntity
@@ -136,7 +136,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "can_ride_minecart",
                 "Can Ride Minecart",
-                "",
+                "Whether this entity will ride minecarts when pushed by them.",
                 entity -> entity.isPushable()
                         && !(entity instanceof Player)
                         && !(entity instanceof IronGolem)
@@ -144,8 +144,8 @@ public abstract class EntityTraits {
                 entityStates));
         arr.add(new StateTrait<>(
                 "entity_group",
-                "Entity Group",
-                "",
+                "Mob Type",
+                "Determines various mob behaviors, including but not limited to enchantment damage bonuses and most undead mob behaviors.</p><p>Unfortunately for drowned, mobs can only have one mob type.",
                 entity -> {
                     if (entity instanceof LivingEntity) {
                         MobType mobType = ((LivingEntity) entity).getMobType();
@@ -167,7 +167,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "fire_immune",
                 "Fire Immune",
-                "",
+                "Determines whether this entity is immune to fire damage. These entities will still ignite.",
                 Entity::fireImmune,
                 entityStates));
         arr.add(new StateTrait<>(
@@ -189,7 +189,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "leadable",
                 "Leadable",
-                "",
+                "Determines whether leads can be used on this entity.",
                 entity -> entity instanceof Mob && ((Mob) entity).canBeLeashed(null),
                 entityStates));
         arr.add(new StateTrait<>(
@@ -201,7 +201,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "max_health",
                 "Max Health",
-                "",
+                "The max health of this entity.",
                 entity -> {
                     if (entity instanceof LivingEntity) {
                         if (entity instanceof AbstractChestedHorse || entity instanceof Horse) {
@@ -233,19 +233,19 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "shearable",
                 "Shearable",
-                "",
+                "Determines whether shears can be used on this entity.",
                 entity -> entity instanceof Shearable && ((Shearable) entity).readyForShearing(),
                 entityStates));
         arr.add(new StateTrait<>(
                 "step_height",
                 "Step Height",
-                "",
+                "Determines how high this entity can step up when walking into a block, boat, or shulker.",
                 Entity::maxUpStep,
                 entityStates));
         arr.add(new StateTrait<>(
                 "summonable",
                 "Summonable",
-                "",
+                "Determines whether this entity can be summoned with the /summon command.",
                 entity -> entity.getType().canSummon(),
                 entityStates));
         arr.add(new StateTrait<>(
@@ -491,7 +491,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "player_controllable",
                 "Player Controllable",
-                "",
+                "TODO",
                 entity -> {
                     try {
                         return entity instanceof LivingEntity && entity.getClass().getMethod("getRiddenInput", Player.class, Vec3.class).getDeclaringClass() != LivingEntity.class;
