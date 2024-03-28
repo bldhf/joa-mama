@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.piston.*;
 import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.material.*;
 
 import java.lang.reflect.Field;
@@ -27,7 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@SuppressWarnings("UnusedReturnValue")
+@SuppressWarnings({"deprecation"})
 public abstract class BlockStateTraits {
     private static final Vector<BlockState> blockStates;
 //    private static final Map<Material, String> materialMap = new HashMap<>();
@@ -45,9 +46,6 @@ public abstract class BlockStateTraits {
 //        setupClassNames(Material.class, materialMap);
         setupClassNames(MapColor.class, mapColorMap);
         setupClassNames(BlockTags.class, blockTags, true);
-//        System.out.println(materialMap);
-        JoaMama.LOGGER.info(mapColorMap.toString());
-        JoaMama.LOGGER.info(blockTags.toString());
 
     }
 
@@ -68,17 +66,11 @@ public abstract class BlockStateTraits {
                 }
             }
         }
-        JoaMama.LOGGER.info(map.toString());
     }
 
     public static boolean isWater (BlockState state) {
         FluidState fluidState = state.getFluidState();
         return fluidState.is(Fluids.FLOWING_WATER) || fluidState.is(Fluids.WATER);
-    }
-
-    public static boolean isLava (BlockState state) {
-        FluidState fluidState = state.getFluidState();
-        return fluidState.is(Fluids.FLOWING_LAVA) || fluidState.is(Fluids.LAVA);
     }
 
     public static boolean isWaterSource (BlockState state) {
@@ -616,13 +608,14 @@ public abstract class BlockStateTraits {
                             return "No";
                         },
                         blockStates));
-        var manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
-        var blocksInStructures = manager.listTemplates()
+        StructureTemplateManager manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
+        Set<Block> blocksInStructures = manager.listTemplates()
                 .map(rl -> manager.get(rl).orElseThrow())
                 .flatMap(template -> {
                     try {
-                        var palettesField = template.getClass().getDeclaredField("palettes");
+                        Field palettesField = template.getClass().getDeclaredField("palettes");
                         palettesField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
                         var palettes = (List<StructureTemplate.Palette>) palettesField.get(template);
                         return palettes.stream()
                                 .map(StructureTemplate.Palette::blocks)

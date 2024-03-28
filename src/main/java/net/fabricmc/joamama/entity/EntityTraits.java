@@ -5,7 +5,9 @@ import com.google.common.collect.SetMultimap;
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.StateTrait;
 import net.fabricmc.joamama.mixin.EntityTypeAccessor;
+import net.minecraft.core.Registry;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -37,10 +39,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public abstract class EntityTraits {
     private static final SetMultimap<EntityType<?>, EntityState> entityStates;
+    private static Registry<MobEffect> effects;
 
     static {
         entityStates = MultimapBuilder.hashKeys().hashSetValues().build();
@@ -48,6 +52,10 @@ public abstract class EntityTraits {
 
     public static void load (Iterable<EntityType<?>> entityTypes) {
         entityTypes.forEach(type -> entityStates.putAll(type, EntityStateManager.getEntityStateManager(type).getStates()));
+    }
+
+    public static void load_effect (Registry<MobEffect> effects) {
+        EntityTraits.effects = effects;
     }
 
     private static Object getAttributeValueIfPresent (Entity entity, Attribute attribute) {
@@ -248,204 +256,13 @@ public abstract class EntityTraits {
                 "Determines whether this entity can be summoned with the /summon command.",
                 entity -> entity.getType().canSummon(),
                 entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_speed",
-                "Immune to Speed",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_slowness",
-                "Immune to Slowness",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_haste",
-                "Immune to Haste",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_mining_fatigue",
-                "Immune to Mining Fatigue",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_strength",
-                "Immune to Strength",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_instant_health",
-                "Immune to Instant Health",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.HEAL, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_instant_damage",
-                "Immune to Instant Damage",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.HARM, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_jump_boost",
-                "Immune to Jump Boost",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.JUMP, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_nausea",
-                "Immune to Nausea",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.CONFUSION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_regeneration",
-                "Immune to Regeneration",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.REGENERATION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_resistance",
-                "Immune to Resistance",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_fire_resistance",
-                "Immune to Fire Resistance",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_water_breathing",
-                "Immune to Water Breathing",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_invisibility",
-                "Immune to Invisibility",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_blindness",
-                "Immune to Blindness",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_night_vision",
-                "Immune to Night Vision",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_hunger",
-                "Immune to Hunger",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.HUNGER, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_weakness",
-                "Immune to Weakness",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_poison",
-                "Immune to Poison",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.POISON, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_wither",
-                "Immune to Wither",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.WITHER, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_health_boost",
-                "Immune to Health Boost",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_absorption",
-                "Immune to Absorption",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_saturation",
-                "Immune to Saturation",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.SATURATION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_glowing",
-                "Immune to Glowing",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.GLOWING, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_levitation",
-                "Immune to Levitation",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.LEVITATION, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_luck",
-                "Immune to Luck",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.LUCK, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_unluck",
-                "Immune to Unluck",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.UNLUCK, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_slow_falling",
-                "Immune to Slow Falling",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_conduit_power",
-                "Immune to Conduit Power",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_dolphins_grace",
-                "Immune to Dolphins Grace",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_bad_omen",
-                "Immune to Bad Omen",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_hero_of_the_village",
-                "Immune to Hero Of The Village",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.HERO_OF_THE_VILLAGE, 600, 0, false, false), entity),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_darkness",
-                "Immune to Darkness",
-                "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(MobEffects.DARKNESS, 600, 0, false, false), entity),
-                entityStates));
+        for (MobEffect effect : effects) {
+            arr.add(new StateTrait<>(
+                "immune_to_" + effects.getKey(effect).getPath(), // e.g. for Bad Luck, this is "immune_to_unluck"
+                "Immune to " + effect.getDisplayName().getString(),
+                "Whether this entity is immune to " + effect.getDisplayName().getString() + ".",
+                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(effect, 600, 0, false, false), entity),
+                entityStates));}
         /*arr.add(new StateTrait<>(
                 "immune_to_fire",
                 "Immune to Fire",
@@ -512,6 +329,12 @@ public abstract class EntityTraits {
             "Mob Category",
             "Determines what mob cap this entity uses when spawning.",
             entity -> entity.getType().getCategory(),
+            entityStates));
+        arr.add(new StateTrait<>(
+            "zombie",
+            "Zombie",
+            "Determines whether this mob will trample turtle eggs and spawn zombie reinforcements.</p><p>Reinforcements will be regular zombies, <i>not</i> the same type as the one who called them.",
+            entity -> entity instanceof Zombie,
             entityStates));
     }
 }

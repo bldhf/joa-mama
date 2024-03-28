@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin (Block.class)
-public abstract class BlockMixin extends BlockBehaviour{
+public abstract class BlockMixin extends BlockBehaviour {
     public BlockMixin (Properties settings) {
         super(settings);
     }

@@ -44,7 +44,7 @@ public class JoaMama implements ModInitializer {
 		BlockStateTraits.getTheWholeThing(outputBlockState);
 		//BlockStateTraits.getInstantUpdaterStuff(outputBlockState);
 
-		save("blockstate", "hardness", "exists_as_item", "supports_redstone_dust");
+		save("blockstate", "");
 	}
 
 	public static void onReloadResources (IntegratedServer server, ServerLevel world, Registry<Biome> biomes, Minecraft client, ClientLevel clientWorld, ClientPacketListener networkHandler, StatsCounter stats, ClientRecipeBook recipeBook) {
@@ -55,12 +55,13 @@ public class JoaMama implements ModInitializer {
 		EntityStateManager.load(world);
 		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
 		EntityTraits.load(BuiltInRegistries.ENTITY_TYPE);
+		EntityTraits.load_effect(BuiltInRegistries.MOB_EFFECT);
 		EntityTraits.getTheWholeThing(outputEntity);
 
 		BiomeTraits.load(biomes);
 		BiomeTraits.getTheWholeThing(outputBiome);
 
-		save("entity", "hurt_by_water", "fire_immune", "shearable");
+		save("entity");
 	}
 
 	private static void save () {
