@@ -22,24 +22,24 @@ import java.util.Map;
 public abstract class BiomeTraits {
     private static Registry<Biome> biomes;
 
-    public static void load (Registry<Biome> biomes) {
+    public static void load(Registry<Biome> biomes) {
         BiomeTraits.biomes = biomes;
     }
 
-    record SpawnEntry (@Expose int weight, @Expose int min, @Expose int max) {
+    record SpawnEntry(@Expose int weight, @Expose int min, @Expose int max) {
         private static final Gson GSON = TraitsGson.gson();
-        public String toString () {
+        public String toString() {
             return GSON.toJson(this);
         }
     }
 
-    private static Map<EntityType<?>, SpawnEntry> spawnPoolToMap (WeightedRandomList<MobSpawnSettings.SpawnerData> pool) {
+    private static Map<EntityType<?>, SpawnEntry> spawnPoolToMap(WeightedRandomList<MobSpawnSettings.SpawnerData> pool) {
         Map<EntityType<?>, SpawnEntry> map = new HashMap<>();
         pool.unwrap().forEach(entry -> map.put(entry.type, new SpawnEntry(entry.getWeight().asInt(), entry.minCount, entry.maxCount)));
         return map;
     }
 
-    public static void getTheWholeThing (List<SimpleTrait<Biome, ?>> arr) {
+    public static void getTheWholeThing(List<SimpleTrait<Biome, ?>> arr) {
         arr.add(new SimpleTrait<>(
                 "spawn_entries_monster",
                 "Spawn Entries (Monster)",

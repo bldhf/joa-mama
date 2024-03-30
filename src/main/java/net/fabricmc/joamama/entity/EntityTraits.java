@@ -6,7 +6,11 @@ import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.StateTrait;
 import net.fabricmc.joamama.mixin.EntityTypeAccessor;
 import net.minecraft.core.Registry;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -25,13 +29,11 @@ import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.animal.camel.Camel;
 import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
 import net.minecraft.world.entity.animal.horse.Horse;
-import net.minecraft.world.entity.monster.Shulker;
-import net.minecraft.world.entity.monster.Strider;
-import net.minecraft.world.entity.monster.Vindicator;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
@@ -45,28 +47,27 @@ import java.util.stream.Collectors;
 public abstract class EntityTraits {
     private static final SetMultimap<EntityType<?>, EntityState> entityStates;
     private static Registry<MobEffect> effects;
+    private static ServerLevel level;
 
     static {
         entityStates = MultimapBuilder.hashKeys().hashSetValues().build();
     }
 
-    public static void load (Iterable<EntityType<?>> entityTypes) {
+    public static void load(Iterable<EntityType<?>> entityTypes, Registry<MobEffect> effects, ServerLevel level) {
         entityTypes.forEach(type -> entityStates.putAll(type, EntityStateManager.getEntityStateManager(type).getStates()));
-    }
-
-    public static void load_effect (Registry<MobEffect> effects) {
         EntityTraits.effects = effects;
+        EntityTraits.level = level;
     }
 
-    private static Object getAttributeValueIfPresent (Entity entity, Attribute attribute) {
+    private static Object getAttributeValueIfPresent(Entity entity, Attribute attribute) {
         return entity instanceof LivingEntity && ((LivingEntity) entity).getAttributes().hasAttribute(attribute) ? ((LivingEntity) entity).getAttributeValue(attribute) : "N/A";
     }
 
-    public static void getTheWholeThing (List<StateTrait<EntityType<?>, ?>> arr) {
+    public static void getTheWholeThing(List<StateTrait<EntityType<?>, ?>> arr) {
         arr.add(new StateTrait<>(
                 "width",
                 "Width",
-                "The width of this entity. All entity hitboxes except for item frames and paintings have square horizontal cross-sections, so there is no distinction between length and width.",
+                "The width of this entity. All entity hitboxes except for item frames, paintings, and shulkers have square horizontal cross-sections, so there is no distinction between length and width.",
                 Entity::getBbWidth,
                 entityStates));
         arr.add(new StateTrait<>(
@@ -120,7 +121,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "can_breathe_in_water",
                 "Can Breathe Underwater",
-                "Determintes whether this entity can breathe underwater.",
+                "Determines whether this entity can breathe underwater.",
                 entity -> entity instanceof LivingEntity && ((LivingEntity) entity).canBreatheUnderwater(),
                 entityStates));
         arr.add(new StateTrait<>(
@@ -133,7 +134,7 @@ public abstract class EntityTraits {
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_ride_boat",
-                "Can Ride Boat",
+                "Can Ride Boats",
                 "Whether this entity will ride boats when pushed by them.",
                 entity -> entity.isPushable()
                         && entity.getBbWidth() < EntityType.BOAT.getWidth()
@@ -143,7 +144,7 @@ public abstract class EntityTraits {
                 entityStates));
         arr.add(new StateTrait<>(
                 "can_ride_minecart",
-                "Can Ride Minecart",
+                "Can Ride Minecarts",
                 "Whether this entity will ride minecarts when pushed by them.",
                 entity -> entity.isPushable()
                         && !(entity instanceof Player)
@@ -169,7 +170,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "eye_height",
                 "Eye Height",
-                "",
+                "TODO",
                 entity -> entity.getEyeHeight(entity.getPose()),
                 entityStates));
         arr.add(new StateTrait<>(
@@ -180,11 +181,11 @@ public abstract class EntityTraits {
                 entityStates));
         arr.add(new StateTrait<>(
                 "height_offset",
-                "Height Offset",
+                "Riding Offset (Self)",
                 "The height offset this entity adds to itself when riding a vehicle.",
                 entity -> {
                     if (entity instanceof Shulker) {
-                        return "1.875 - vehicle's mounted height offset";
+                        return "TODO";
                     } else return entity.getMyRidingOffset();
                 },
                 entityStates));
@@ -204,7 +205,7 @@ public abstract class EntityTraits {
                 "living",
                 "Living",
                 "Whether this is a LivingEntity. Includes armor stands.",
-                Entity::showVehicleHealth,
+                entity -> entity instanceof LivingEntity,
                 entityStates));
         arr.add(new StateTrait<>(
                 "max_health",
@@ -222,8 +223,8 @@ public abstract class EntityTraits {
                 entityStates));
         arr.add(new StateTrait<>(
                 "mounted_height_offset",
-                "Mounted Height Offset",
-                "The height offset this entity adds to its passengers.",
+                "Riding Offset (Passenger)",
+                "The height offset this entity adds to its passenger(s).",
                 entity -> {
                     if (entity instanceof Camel) {
                         return "TODO";
@@ -264,12 +265,6 @@ public abstract class EntityTraits {
                 entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(effect, 600, 0, false, false), entity),
                 entityStates));}
         /*arr.add(new StateTrait<>(
-                "immune_to_fire",
-                "Immune to Fire",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_FIRE),
-                entityStates));
-        arr.add(new StateTrait<>(
                 "immune_to_projectiles",
                 "Immune to Projectiles",
                 "",
@@ -335,6 +330,18 @@ public abstract class EntityTraits {
             "Zombie",
             "Determines whether this mob will trample turtle eggs and spawn zombie reinforcements.</p><p>Reinforcements will be regular zombies, <i>not</i> the same type as the one who called them.",
             entity -> entity instanceof Zombie,
+            entityStates));
+    }
+
+    public static void getDamageImmunities(List<StateTrait<EntityType<?>, ?>> arr) {
+        JoaMama.LOGGER.error("Damage immunity properties are broken for players because they require a ServerPlayer, not a LocalPlayer.");
+        Arrow arrow = EntityType.ARROW.create(level);
+
+        arr.add(new StateTrait<>(
+            "immune_to_arrows",
+            "Immune to Arrows and Tridents",
+            "Whether this entity is immune to arrows and tridents. These entities will deflect arrows and tridents that hit them. Endermen will only do this if they fail to teleport when hit.",
+            entity -> entity instanceof EnderMan || !entity.hurt(arrow.damageSources().arrow(arrow, arrow), 1984),
             entityStates));
     }
 }

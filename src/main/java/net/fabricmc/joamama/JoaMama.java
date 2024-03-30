@@ -1,6 +1,7 @@
 package net.fabricmc.joamama;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.entity.EntityStateManager;
 import net.fabricmc.joamama.entity.EntityTraits;
@@ -10,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -33,42 +36,55 @@ public class JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
 	private static final Path OUTPUT_PATH = FabricLoader.getInstance().getConfigDir().resolve("output").resolve("output.json");
+	private static boolean CALLED_ON_RELOAD_RESOURCES = false;
 	private static final List<SimpleTrait<BlockState, ?>> outputBlockState = new ArrayList<>();
 	private static final List<StateTrait<EntityType<?>, ?>> outputEntity = new ArrayList<>();
 	private static final List<SimpleTrait<Biome, ?>> outputBiome = new ArrayList<>();
 
 	@Override
-	public void onInitialize () {
+	public void onInitialize() {
 		LOGGER.info("onInitialize called");
 		BlockStateTraits.load(BuiltInRegistries.BLOCK);
 		BlockStateTraits.getTheWholeThing(outputBlockState);
 		//BlockStateTraits.getInstantUpdaterStuff(outputBlockState);
 
 		save("blockstate", "");
+		/*CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
+			Commands.literal("save")
+				.requires(CommandSourceStack::isPlayer)
+				.executes(context -> {
+
+					return 0;
+				})
+		));*/
 	}
 
-	public static void onReloadResources (IntegratedServer server, ServerLevel world, Registry<Biome> biomes, Minecraft client, ClientLevel clientWorld, ClientPacketListener networkHandler, StatsCounter stats, ClientRecipeBook recipeBook) {
+	public static void onReloadResources(IntegratedServer server, ServerLevel level, Registry<Biome> biomes, Minecraft client, ClientLevel clientLevel, ClientPacketListener connection, StatsCounter stats, ClientRecipeBook recipeBook) {
 		LOGGER.info("World load mixin call successful!");
 
-		BlockStateTraits.addBlockTagProperties(outputBlockState, BlockTags.class);
+		if (!CALLED_ON_RELOAD_RESOURCES) {
+			BlockStateTraits.addBlockTagProperties(outputBlockState, BlockTags.class);
 
-		EntityStateManager.load(world);
-		EntityState.load(server, world, client, clientWorld, networkHandler, stats, recipeBook);
-		EntityTraits.load(BuiltInRegistries.ENTITY_TYPE);
-		EntityTraits.load_effect(BuiltInRegistries.MOB_EFFECT);
-		EntityTraits.getTheWholeThing(outputEntity);
+			EntityStateManager.load(level);
+			EntityState.load(server, level, client, clientLevel, connection, stats, recipeBook);
+			EntityTraits.load(BuiltInRegistries.ENTITY_TYPE, BuiltInRegistries.MOB_EFFECT, level);
+			EntityTraits.getTheWholeThing(outputEntity);
+			EntityTraits.getDamageImmunities(outputEntity);
 
-		BiomeTraits.load(biomes);
-		BiomeTraits.getTheWholeThing(outputBiome);
+			BiomeTraits.load(biomes);
+			BiomeTraits.getTheWholeThing(outputBiome);
 
-		save("entity");
+			CALLED_ON_RELOAD_RESOURCES = true;
+		}
+
+		save("entity", "immune_to_arrows");
 	}
 
-	private static void save () {
+	private static void save() {
 		save(null);
 	}
 
-	private static void save (String type, String ... ids) {
+	private static void save(String type, String ... ids) {
 		List<String> outputString;
 		if (type == null) {
 			outputString = new ArrayList<>();

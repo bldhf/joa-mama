@@ -10,7 +10,7 @@ import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin (FlowingFluid.class)
+@Mixin(FlowingFluid.class)
 public interface FlowableFluidAccessor {
     @Invoker
     boolean invokeCanSpreadTo(BlockGetter world, BlockPos fluidPos, BlockState fluidBlockState, Direction flowDirection, BlockPos flowTo, BlockState flowToBlockState, FluidState fluidState, Fluid fluid);

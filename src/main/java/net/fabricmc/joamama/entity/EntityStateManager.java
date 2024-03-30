@@ -26,20 +26,20 @@ public class EntityStateManager {
         this.properties = new HashSet<>(properties);
     }
 
-    public Set<EntityState> getStates () {
+    public Set<EntityState> getStates() {
         return new SimpleStateManager(properties).getStates().stream().map(state -> new EntityState(type, state)).collect(Collectors.toSet());
     }
 
-    public static EntityStateManager getEntityStateManager (EntityType<?> type) {
+    public static EntityStateManager getEntityStateManager(EntityType<?> type) {
         return new EntityStateManager(type, entityProperties.get(type));
     }
 
-    public static void load (Level world) {
+    public static void load(Level level) {
         entityProperties = new HashMap<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             entityProperties.put(type, new HashSet<>());
             if (type == EntityType.PLAYER) continue;
-            Entity entity = type.create(world);
+            Entity entity = type.create(level);
             if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                 entityProperties.get(type).add(EntityProperties.IS_BABY);
             }
@@ -54,13 +54,16 @@ public class EntityStateManager {
         entityProperties.get(EntityType.BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CHEST_BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CAMEL).add(EntityProperties.CAMEL_POSE);
+        entityProperties.get(EntityType.ENDER_DRAGON).add(EntityProperties.DRAGON_PHASE);
         entityProperties.get(EntityType.GOAT).add(EntityProperties.GOAT_POSE);
         entityProperties.get(EntityType.PANDA).add(EntityProperties.PANDA_VARIANT);
         entityProperties.get(EntityType.PUFFERFISH).add(EntityProperties.PUFF_STATE);
         entityProperties.get(EntityType.SHEEP).add(EntityProperties.SHEARED);
+        entityProperties.get(EntityType.SHULKER).add(EntityProperties.PEEK);
         entityProperties.get(EntityType.SNOW_GOLEM).add(EntityProperties.HAS_PUMPKIN);
         entityProperties.get(EntityType.VILLAGER).add(EntityProperties.VILLAGER_POSE);
         entityProperties.get(EntityType.WARDEN).add(EntityProperties.WARDEN_POSE);
+        entityProperties.get(EntityType.WITHER).add(EntityProperties.WITHER_PHASE);
         entityProperties.get(EntityType.PLAYER).add(EntityProperties.PLAYER_POSE);
     }
 }

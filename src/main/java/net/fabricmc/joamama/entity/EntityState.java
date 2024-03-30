@@ -32,46 +32,46 @@ public class EntityState {
     private final Map<Property<?>, Comparable<?>> entries;
     private static Map<EntityType<?>, Function<EntityState, Entity>> toEntity;
 
-    public EntityState (EntityType<?> type, SimpleState state) {
+    public EntityState(EntityType<?> type, SimpleState state) {
         this.type = type;
         this.entries = state.getEntries();
     }
 
-    public EntityType<?> getType () {
+    public EntityType<?> getType() {
         return this.type;
     }
 
-    public Comparable<?> get (Property<?> property) {
+    public Comparable<?> get(Property<?> property) {
         return this.entries.get(property);
     }
 
-    public Map<Property<?>, Comparable<?>> getEntries () {
+    public Map<Property<?>, Comparable<?>> getEntries() {
         return new HashMap<>(this.entries);
     }
 
-    public Entity entity () {
+    public Entity entity() {
         return toEntity.get(this.type).apply(this);
     }
 
-    private static void registerType (EntityType<?> type, Function<EntityState, Entity> create) {
+    private static void registerType(EntityType<?> type, Function<EntityState, Entity> create) {
         toEntity.put(type, create);
     }
 
-    private static void registerRule (EntityType<?> type, BiFunction<EntityState, Entity, Entity> rule) {
+    private static void registerRule(EntityType<?> type, BiFunction<EntityState, Entity, Entity> rule) {
         Function<EntityState, Entity> create = toEntity.get(type);
         toEntity.put(type, state -> rule.apply(state, create.apply(state)));
     }
 
-    public static void load (IntegratedServer server, ServerLevel world, Minecraft client, ClientLevel clientWorld, ClientPacketListener networkHandler, StatsCounter stats, ClientRecipeBook recipeBook) {
+    public static void load(IntegratedServer server, ServerLevel level, Minecraft client, ClientLevel clientLevel, ClientPacketListener connection, StatsCounter stats, ClientRecipeBook recipeBook) {
         toEntity = new HashMap<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
-                registerType(EntityType.PLAYER, state -> new LocalPlayer(client, clientWorld, networkHandler, stats, recipeBook, false, false));
+                registerType(EntityType.PLAYER, state -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, false, false));
             } else {
-                registerType(type, state -> type.create(world));
-                Entity entity = type.create(world);
+                registerType(type, state -> type.create(level));
+                Entity entity = type.create(level);
                 if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
-                    registerRule(type, EntityProperties::setIsBaby);
+                    registerRule(type, EntityProperties::setBaby);
                 }
                 if (entity instanceof Slime) {
                     registerRule(type, EntityProperties::setSize);
@@ -85,13 +85,16 @@ public class EntityState {
         registerRule(EntityType.BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CHEST_BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CAMEL, EntityProperties::setPose);
+        registerRule(EntityType.ENDER_DRAGON, EntityProperties::setPhase);
         registerRule(EntityType.GOAT, EntityProperties::setPose);
         registerRule(EntityType.PANDA, EntityProperties::setVariant);
         registerRule(EntityType.PUFFERFISH, EntityProperties::setPuffState);
         registerRule(EntityType.SHEEP, EntityProperties::setSheared);
+        registerRule(EntityType.SHULKER, EntityProperties::setPeek);
         registerRule(EntityType.SNOW_GOLEM, EntityProperties::setSheared);
         registerRule(EntityType.VILLAGER, EntityProperties::setPose);
         registerRule(EntityType.WARDEN, EntityProperties::setPose);
+        registerRule(EntityType.WITHER, EntityProperties::setPhase);
         registerRule(EntityType.PLAYER, EntityProperties::setPose);
     }
 }

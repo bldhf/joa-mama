@@ -15,13 +15,13 @@ public class TraitsGson {
             .setPrettyPrinting()
             .create();
 
-    public static Gson gson () {
+    public static Gson gson() {
         return gson;
     }
 
     @SuppressWarnings("rawtypes")
     private static class TableSerializer implements JsonSerializer<Table> {
-        public JsonElement serialize (Table source, Type type, JsonSerializationContext context) {
+        public JsonElement serialize(Table source, Type type, JsonSerializationContext context) {
             return context.serialize(source.rowMap());
         }
     }
@@ -35,7 +35,7 @@ public class TraitsGson {
                 .setPrettyPrinting()
                 .create();
 
-        public JsonElement serialize (Map source, Type type, JsonSerializationContext context) {
+        public JsonElement serialize(Map source, Type type, JsonSerializationContext context) {
             if (source.size() == 1) {
                 return context.serialize(source.values().iterator().next());
             } else {

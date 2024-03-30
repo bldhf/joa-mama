@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin (RedStoneWireBlock.class)
+@Mixin(RedStoneWireBlock.class)
 public interface RedStoneWireBlockAccessor {
     @Invoker
     boolean invokeCanSurviveOn(BlockGetter world, BlockPos pos, BlockState floor);
