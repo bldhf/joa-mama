@@ -54,6 +54,7 @@ public class EntityStateManager {
         entityProperties.get(EntityType.BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CHEST_BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CAMEL).add(EntityProperties.CAMEL_POSE);
+        entityProperties.get(EntityType.CHICKEN).add(EntityProperties.IS_CHICKEN_JOCKEY);
         entityProperties.get(EntityType.ENDER_DRAGON).add(EntityProperties.DRAGON_PHASE);
         entityProperties.get(EntityType.GOAT).add(EntityProperties.GOAT_POSE);
         entityProperties.get(EntityType.PANDA).add(EntityProperties.PANDA_VARIANT);

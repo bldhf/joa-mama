@@ -85,6 +85,7 @@ public class EntityState {
         registerRule(EntityType.BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CHEST_BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CAMEL, EntityProperties::setPose);
+        registerRule(EntityType.CHICKEN, EntityProperties::setJockey);
         registerRule(EntityType.ENDER_DRAGON, EntityProperties::setPhase);
         registerRule(EntityType.GOAT, EntityProperties::setPose);
         registerRule(EntityType.PANDA, EntityProperties::setVariant);

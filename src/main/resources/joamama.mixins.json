@@ -13,7 +13,8 @@
     "ReloadMixin",
     "ShulkerAccessor",
     "SpreadableBlockAccessor",
-    "WallBlockAccessor"
+    "WallBlockAccessor",
+    "ZombieMixin"
   ],
   "client": [],
   "injectors": {

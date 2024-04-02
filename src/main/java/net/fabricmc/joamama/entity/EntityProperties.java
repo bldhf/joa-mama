@@ -6,10 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.animal.Panda;
-import net.minecraft.world.entity.animal.Pufferfish;
-import net.minecraft.world.entity.animal.Sheep;
-import net.minecraft.world.entity.animal.SnowGolem;
+import net.minecraft.world.entity.animal.*;
 import net.minecraft.world.entity.animal.camel.Camel;
 import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
@@ -31,6 +28,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 public abstract class EntityProperties {
     public static final BooleanProperty IS_BABY = BooleanProperty.create("is_baby");
+    public static final BooleanProperty IS_CHICKEN_JOCKEY = BooleanProperty.create("jockey");
     public static final BooleanProperty MARKER = BooleanProperty.create("marker");
     public static final EnumProperty<Peek> PEEK = EnumProperty.create("peek", Peek.class);
     public static final EnumProperty<DragonPhase> DRAGON_PHASE = EnumProperty.create("phase", DragonPhase.class);
@@ -68,6 +66,13 @@ public abstract class EntityProperties {
             ((Zoglin) entity).setBaby((Boolean) state.get(IS_BABY));
         } else if (entity instanceof Zombie) {
             ((Zombie) entity).setBaby((Boolean) state.get(IS_BABY));
+        }
+        return entity;
+    }
+
+    public static Entity setJockey(EntityState state, Entity entity) {
+        if (entity instanceof Chicken) {
+            ((Chicken) entity).setChickenJockey((Boolean) state.get(IS_CHICKEN_JOCKEY));
         }
         return entity;
     }

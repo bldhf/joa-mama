@@ -7,20 +7,9 @@ import net.fabricmc.joamama.StateTrait;
 import net.fabricmc.joamama.mixin.EntityTypeAccessor;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageSources;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.Saddleable;
-import net.minecraft.world.entity.Shearable;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Bucketable;
@@ -39,9 +28,10 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class EntityTraits {
@@ -170,7 +160,7 @@ public abstract class EntityTraits {
         arr.add(new StateTrait<>(
                 "eye_height",
                 "Eye Height",
-                "TODO",
+                "TODO", // TODO | 4/1/2024 | Missing description
                 entity -> entity.getEyeHeight(entity.getPose()),
                 entityStates));
         arr.add(new StateTrait<>(
@@ -185,7 +175,7 @@ public abstract class EntityTraits {
                 "The height offset this entity adds to itself when riding a vehicle.",
                 entity -> {
                     if (entity instanceof Shulker) {
-                        return "TODO";
+                        return "TODO"; // TODO | 4/1/2024 | Needs extra code digging
                     } else return entity.getMyRidingOffset();
                 },
                 entityStates));
@@ -227,7 +217,7 @@ public abstract class EntityTraits {
                 "The height offset this entity adds to its passenger(s).",
                 entity -> {
                     if (entity instanceof Camel) {
-                        return "TODO";
+                        return "TODO"; // TODO | 4/1/2024 | Needs extra code digging
                     } else if (entity instanceof Strider) {
                         return entity.getPassengersRidingOffset() + " ± 0.06 if its limbs are moving";
                     } else return entity.getPassengersRidingOffset();
@@ -264,46 +254,10 @@ public abstract class EntityTraits {
                 "Whether this entity is immune to " + effect.getDisplayName().getString() + ".",
                 entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(effect, 600, 0, false, false), entity),
                 entityStates));}
-        /*arr.add(new StateTrait<>(
-                "immune_to_projectiles",
-                "Immune to Projectiles",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_PROJECTILE),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_explosions",
-                "Immune to Explosions",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_EXPLOSION),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_falls",
-                "Immune to Falls",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_FALL),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_drowning",
-                "Immune to Drowning",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_DROWNING),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_freezing",
-                "Immune to Freezing",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_FREEZING),
-                entityStates));
-        arr.add(new StateTrait<>(
-                "immune_to_lightning",
-                "Immune to Lightning",
-                "",
-                entity -> entity.isInvulnerableTo(DamageTypeTags.IS_LIGHTNING),
-                entityStates));*/
         arr.add(new StateTrait<>(
                 "player_controllable",
                 "Player Controllable",
-                "TODO",
+                "", // TODO | 4/1/2024 | Missing description
                 entity -> {
                     try {
                         return entity instanceof LivingEntity && entity.getClass().getMethod("getRiddenInput", Player.class, Vec3.class).getDeclaringClass() != LivingEntity.class;
@@ -331,10 +285,27 @@ public abstract class EntityTraits {
             "Determines whether this mob will trample turtle eggs and spawn zombie reinforcements.</p><p>Reinforcements will be regular zombies, <i>not</i> the same type as the one who called them.",
             entity -> entity instanceof Zombie,
             entityStates));
+        arr.add(new StateTrait<>(
+            "xp",
+            "Experience Dropped",
+            "How much experience this entity drops when killed.",
+            entity -> {
+                if (entity instanceof LivingEntity) {
+                    Set<Integer> range = JoaMama.testRandom(() -> ((LivingEntity) entity).getExperienceReward(), 1984).keySet();
+                    if (entity instanceof Zombie) {
+                        JoaMama.LOGGER.error(entity.getType().toShortString());
+                        for (int val : range.stream().sorted().toList()) JoaMama.LOGGER.info(String.valueOf(val));
+                    }
+                    int min = Collections.min(range);
+                    int max = Collections.max(range);
+                    return (min == max ? min : "(" + min + " - " + max + ")") + (entity instanceof Mob ? " + (1 - 3) per equipment" : "");
+                } else return 0;
+            },
+            entityStates));
     }
 
     public static void getDamageImmunities(List<StateTrait<EntityType<?>, ?>> arr) {
-        JoaMama.LOGGER.error("Damage immunity properties are broken for players because they require a ServerPlayer, not a LocalPlayer.");
+        // FIXME | 3/30/2024 | Damage immunity properties are broken for players because they require a ServerPlayer rather than a LocalPlayer
         Arrow arrow = EntityType.ARROW.create(level);
 
         arr.add(new StateTrait<>(
