@@ -1,7 +1,7 @@
 package net.fabricmc.joamama;
 
-public interface Trait {
-    public String getId ();
-    public String getName ();
-    public String getDesc ();
+public interface Trait<T> {
+    String getId();
+    String getName();
+    String getDesc();
 }

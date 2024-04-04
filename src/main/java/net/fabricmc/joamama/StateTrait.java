@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class StateTrait<O, T> implements Trait {
+public abstract class StateTrait<O, T> implements Trait<T> {
     private static final Gson GSON = TraitsGson.gson();
     @Expose
     private final String id;
@@ -27,9 +27,8 @@ public class StateTrait<O, T> implements Trait {
     @SerializedName ("property_description")
     private final String desc;
     @Expose
-    private final Table<O, SimpleState, T> entries;
+    protected final Table<O, SimpleState, T> entries;
 
-    @SuppressWarnings ("unused")
     private StateTrait () {
         this.id = null;
         this.name = null;
@@ -37,48 +36,35 @@ public class StateTrait<O, T> implements Trait {
         this.entries = null;
     }
 
-    public <S extends StateHolder<O, S>> StateTrait (String id, String name, String desc, BiFunction<O, S, T> func, SetMultimap<O, S> entries) {
+    protected StateTrait (String id, String name, String desc) {
         this.id = id;
         this.name = name;
         this.desc = desc;
         this.entries = HashBasedTable.create();
-        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getValues()), func.apply(owner, state)));
-
-        this.simplify();
     }
 
-    public StateTrait (String id, String name, String desc, Function<Entity, T> func, SetMultimap<O, EntityState> entries) {
-        this.id = id;
-        this.name = name;
-        this.desc = desc;
-        this.entries = HashBasedTable.create();
-        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), func.apply(state.entity())));
-
-        this.simplify();
-    }
-
-    public String toString () {
+    public String toString() {
         return GSON.toJson(this);
     }
 
-    public String getId () {
+    public String getId() {
         return this.id;
     }
 
-    public String getName () {
+    public String getName() {
         return this.name;
     }
 
-    public String getDesc () {
+    public String getDesc() {
         return this.desc;
     }
 
-    private T getTrait (O owner, SimpleState state) {
+    private T getTrait(O owner, SimpleState state) {
         SimpleState newState = new SimpleState(state, this.entries.row(owner).keySet().iterator().next().getEntries());
         return entries.get(owner, newState);
     }
 
-    private void simplify () {
+    protected void simplify() {
         SetMultimap<O, Property<?>> notRedundant = MultimapBuilder.hashKeys().hashSetValues().build();
         // Loop through every state owner (eg. Block)
         for (O owner : this.entries.rowKeySet()) {
@@ -92,7 +78,7 @@ public class StateTrait<O, T> implements Trait {
                 for (Property<?> property : state.getEntries().keySet()) {
                     SimpleState testState = state.without(property);
                     // Check if a state has been found with the given property-value pair.
-                    // TODO: the above comment is inaccurate but i don't feel like fixing it right now
+                    // TODO | a long time ago | the above comment is inaccurate but I don't feel like fixing it right now
                     // Otherwise, add it to the test table.
                     if (test.containsKey(testState)) {
                         // If the test output is not equal to the actual output, the property is not redundant.

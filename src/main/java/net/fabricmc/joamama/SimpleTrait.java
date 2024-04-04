@@ -8,7 +8,7 @@ import net.fabricmc.joamama.gson.TraitsGson;
 import java.util.HashMap;
 import java.util.function.Function;
 
-public class SimpleTrait<T, P> implements Trait {
+public class SimpleTrait<O, T> implements Trait<T> {
     private static final Gson gson;
     @Expose
     private final String id;
@@ -18,8 +18,10 @@ public class SimpleTrait<T, P> implements Trait {
     @Expose
     @SerializedName("property_description")
     private final String desc;
+    private final Function<O, T> func;
+    private final Function<O, String> toString;
     @Expose
-    private final HashMap<String, P> entries;
+    private final HashMap<String, T> entries;
 
     static {
         gson = TraitsGson.gson();
@@ -27,38 +29,41 @@ public class SimpleTrait<T, P> implements Trait {
 
     private SimpleTrait() {
         this.id = this.name = this.desc = null;
+        this.func = null;
+        this.toString = null;
         this.entries = null;
     }
 
-    public SimpleTrait(String id, String name, String desc, Function<T, P> func, Iterable<T> entries) {
-        this.id = id;
-        this.name = name;
-        this.desc = desc;
-        this.entries = new HashMap<>();
-        entries.forEach(entry -> this.entries.put(entry.toString(), func.apply(entry)));
+    public SimpleTrait(String id, String name, String desc, Function<O, T> func) {
+        this(id, name, desc, func, Object::toString);
     }
 
-    public SimpleTrait(String id, String name, String desc, Function<T, P> func, Function<T, String> toString, Iterable<T> entries) {
+    public SimpleTrait(String id, String name, String desc, Function<O, T> func, Function<O, String> toString) {
         this.id = id;
         this.name = name;
         this.desc = desc;
+        this.func = func;
+        this.toString = toString;
         this.entries = new HashMap<>();
+    }
+
+    public void load(Iterable<O> entries) {
         entries.forEach(entry -> this.entries.put(toString.apply(entry), func.apply(entry)));
     }
 
-    public String toString () {
+    public String toString() {
         return gson.toJson(this);
     }
 
-    public String getId () {
+    public String getId() {
         return this.id;
     }
 
-    public String getName () {
+    public String getName() {
         return this.name;
     }
 
-    public String getDesc () {
+    public String getDesc() {
         return this.desc;
     }
 }
