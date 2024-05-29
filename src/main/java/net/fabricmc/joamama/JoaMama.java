@@ -24,7 +24,9 @@ import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +44,14 @@ public class JoaMama implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
 	private static final Path OUTPUT_PATH = FabricLoader.getInstance().getConfigDir().resolve("output").resolve("output.json");
 	private static boolean CALLED_ON_RELOAD_RESOURCES = false;
-	private static final TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> blockStateTraits = new TraitCollection<>(SimpleTrait::load);
+	private static final TraitCollection<Block, BlockState> blockStateTraits = new TraitCollection<>(
+		(block, sState) -> {
+			BlockState state = block.defaultBlockState();
+			for(Map.Entry entry : sState.entrySet()) {
+				state = state.setValue(entry.getKey(), entry.getValue());
+			}
+		}
+	);
 	private static final TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> entityTraits = new TraitCollection<>(EntityStateTrait::load);
 	private static final TraitCollection<SimpleTrait<Biome, ?>, Registry<Biome>> biomeTraits = new TraitCollection<>(SimpleTrait::load);
 	private static final Map<String, TraitCollection<?, ?>> traits = Map.of(
@@ -177,5 +186,16 @@ public class JoaMama implements ModInitializer {
 			multiset.put(val, multiset.getOrDefault(val, 0) + 1);
 		}
 		return multiset;
+	}
+
+	public static String toString(Object object) {
+		// FIXME | 24-04-07 | Biomes are missing here
+		if (object instanceof Block block) {
+			return BuiltInRegistries.BLOCK.getKey(block).toString();
+		} else if (object instanceof EntityType entityType) {
+			return BuiltInRegistries.ENTITY_TYPE.getKey(entityType).toString();
+		} else {
+			return object.toString();
+		}
 	}
 }

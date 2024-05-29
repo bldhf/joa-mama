@@ -9,15 +9,17 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.gson.TraitsGson;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.state.StateHolder;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.state.properties.Property;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class StateTrait<O, T> implements Trait<T> {
-    private static final Gson GSON = TraitsGson.gson();
+public class StateTrait<O, S, T>{
+    private Gson gson;
     @Expose
     private final String id;
     @Expose
@@ -25,26 +27,50 @@ public abstract class StateTrait<O, T> implements Trait<T> {
     private final String name;
     @Expose
     @SerializedName ("property_description")
-    private final String desc;
+    private final String description;
     @Expose
     protected final Table<O, SimpleState, T> entries;
+    private final BiFunction<O, S, T> function;
 
-    private StateTrait () {
+    private StateTrait() {
+        this.gson = null;
         this.id = null;
         this.name = null;
-        this.desc = null;
+        this.description = null;
         this.entries = null;
+        this.function = null;
     }
 
-    protected StateTrait (String id, String name, String desc) {
+    private StateTrait(String id, String name, String description, BiFunction<O, S, T> function) {
         this.id = id;
         this.name = name;
-        this.desc = desc;
+        this.description = description;
         this.entries = HashBasedTable.create();
+        this.function = function;
+    }
+
+    public static <O, S, T> StateTrait<O, S, T> create(String id, String name, String description, BiFunction<O, S, T> function) {
+        return new StateTrait<>(id, name, description, function);
+    }
+
+    public static <O, T> StateTrait<O, O, T> create(String id, String name, String description, Function<O, T> function) {
+        return new StateTrait<>(id, name, description, (owner, state) -> function.apply(owner));
+    }
+
+    public void load(Map<O, SimpleStateManager> entries, BiFunction<O, SimpleState, S> factory, boolean simplify, boolean cell) {
+        if (cell) gson = TraitsGson.gsonCell();
+        else gson = TraitsGson.gsonRow();
+        entries.forEach((owner, manager) -> manager.getStates().forEach(state -> this.entries.put(owner, state, this.function.apply(owner, factory.apply(owner, state)))));
+        if (simplify) this.simplify();
+    }
+
+    public void load(Iterable<O> entries, Function<O, S> factory) {
+        gson = TraitsGson.gsonRow();
+        entries.forEach(owner -> this.entries.put(owner, new SimpleState(), this.function.apply(owner, factory.apply(owner))));
     }
 
     public String toString() {
-        return GSON.toJson(this);
+        return gson.toJson(this);
     }
 
     public String getId() {
@@ -55,8 +81,8 @@ public abstract class StateTrait<O, T> implements Trait<T> {
         return this.name;
     }
 
-    public String getDesc() {
-        return this.desc;
+    public String getDescription() {
+        return this.description;
     }
 
     private T getTrait(O owner, SimpleState state) {

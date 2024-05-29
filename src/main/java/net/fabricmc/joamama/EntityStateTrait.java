@@ -7,7 +7,7 @@ import net.minecraft.world.entity.EntityType;
 
 import java.util.function.Function;
 
-public class EntityStateTrait<T> extends StateTrait<EntityType<?>, T>{
+public class EntityStateTrait<T> extends StateTrait<EntityType<?>, EntityState, T>{
     private final Function<Entity, T> func;
 
     public EntityStateTrait (String id, String name, String desc, Function<Entity, T> func) {

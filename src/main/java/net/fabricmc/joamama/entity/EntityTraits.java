@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class EntityTraits {
+public final class EntityTraits {
     private static final SetMultimap<EntityType<?>, EntityState> entityStates;
     private static Registry<MobEffect> effects;
     private static ServerLevel level;
@@ -305,7 +305,7 @@ public abstract class EntityTraits {
     }
 
     public static void getDamageImmunities(TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> traits) {
-        // FIXME | 3/30/2024 | Damage immunity properties are broken for players because they require a ServerPlayer rather than a LocalPlayer
+        // FIXME | 24-03-30 | Damage immunity properties are broken for players because they require a ServerPlayer rather than a LocalPlayer
         Arrow arrow = EntityType.ARROW.create(level);
 
         traits.add(new EntityStateTrait<>(

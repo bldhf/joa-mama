@@ -8,7 +8,7 @@ import net.fabricmc.joamama.gson.TraitsGson;
 import java.util.HashMap;
 import java.util.function.Function;
 
-public class SimpleTrait<O, T> implements Trait<T> {
+public class SimpleTrait<O, T>{
     private static final Gson gson;
     @Expose
     private final String id;
@@ -24,7 +24,7 @@ public class SimpleTrait<O, T> implements Trait<T> {
     private final HashMap<String, T> entries;
 
     static {
-        gson = TraitsGson.gson();
+        gson = TraitsGson.gsonRow();
     }
 
     private SimpleTrait() {
@@ -63,7 +63,7 @@ public class SimpleTrait<O, T> implements Trait<T> {
         return this.name;
     }
 
-    public String getDesc() {
+    public String getDescription() {
         return this.desc;
     }
 }

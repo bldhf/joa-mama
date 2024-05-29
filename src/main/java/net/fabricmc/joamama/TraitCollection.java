@@ -1,34 +1,44 @@
 package net.fabricmc.joamama;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import net.fabricmc.joamama.gson.TraitsGson;
+
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
-public class TraitCollection<T extends Trait<?>, C> {
-    private final Map<String, T> traits;
-    private final BiConsumer<T, C> loader; // This should be the load method of the trait.
-    private C entries = null;
+public class TraitCollection<O, S> {
+    private final Map<String, StateTrait<O, S, ?>> traits;
+    private final Map<O, SimpleStateManager> entries;
+    private final BiFunction<O, SimpleState, S> factory;
+    private final boolean simplify;
+    private final boolean cell;
 
-    public TraitCollection(BiConsumer<T, C> loader) {
+    public TraitCollection(BiFunction<O, SimpleState, S> factory, boolean simplify, boolean cell) {
         this.traits = new HashMap<>();
-        this.loader = loader;
+        this.entries = new HashMap<>();
+        this.factory = factory;
+        this.simplify = simplify;
+        this.cell = cell;
+    }
+    public void load(Map<O, SimpleStateManager> entries) {
+        this.entries.putAll(entries);
     }
 
-    public void load(C entries) {
-        this.entries = entries;
+    public List<StateTrait<O, S, ?>> loadTraits(Iterable<String> ids) {
+        List<StateTrait<O, S, ?>> traits = new ArrayList<>();
+        for (String id : ids) {
+            StateTrait<O, S, ?> trait = this.traits.get(id);
+            trait.load(this.entries, this.factory, this.simplify, this.cell);
+            traits.add(trait);
+        }
+        return traits;
     }
 
-    public void add(T trait) {
+    public void add(StateTrait<O, S, ?> trait) {
         this.traits.put(trait.getId(), trait);
     }
 
-    public T loadTrait(String id) {
-        this.loader.accept(this.traits.get(id), entries);
-        return this.traits.get(id);
-    }
-
-    public T get(String id) {
+    public StateTrait<O, S, ?> get(String id) {
         return this.traits.get(id);
     }
 

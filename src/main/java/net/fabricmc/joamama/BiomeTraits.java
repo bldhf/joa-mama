@@ -1,27 +1,20 @@
 package net.fabricmc.joamama;
 
-import com.google.common.collect.SetMultimap;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.gson.TraitsGson;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.util.random.WeightedRandomList;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
-import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public abstract class BiomeTraits {
+public final class BiomeTraits {
     private static Registry<Biome> biomes;
 
     public static void load(TraitCollection<SimpleTrait<Biome, ?>, Registry<Biome>> traits, Registry<Biome> biomes) {
@@ -30,7 +23,7 @@ public abstract class BiomeTraits {
     }
 
     record SpawnEntry(@Expose int weight, @Expose int min, @Expose int max) {
-        private static final Gson GSON = TraitsGson.gson();
+        private static final Gson GSON = TraitsGson.gsonRow();
         public String toString() {
             return GSON.toJson(this);
         }
