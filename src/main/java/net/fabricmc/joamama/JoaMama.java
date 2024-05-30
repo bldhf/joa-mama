@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 // TODO | Replace copied code segments with actual calls to the methods used. Use mixins/mock worlds?
+// TODO | 5/29/2024 | A lot of the basic parts of this project are in dire need of a rewrite. I was (compared to my other languages) inexperienced in Java when I started this project and there's a ton of messy, inconsistent, unnecessary, or just plain bad code here.
 
 public class JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
@@ -45,10 +47,12 @@ public class JoaMama implements ModInitializer {
 	private static final TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> blockStateTraits = new TraitCollection<>(SimpleTrait::load);
 	private static final TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> entityTraits = new TraitCollection<>(EntityStateTrait::load);
 	private static final TraitCollection<SimpleTrait<Biome, ?>, Registry<Biome>> biomeTraits = new TraitCollection<>(SimpleTrait::load);
+	private static final TraitCollection<SimpleTrait<Item, ?>, Registry<Item>> itemTraits = new TraitCollection<>(SimpleTrait::load);
 	private static final Map<String, TraitCollection<?, ?>> traits = Map.of(
 		"blockstate", blockStateTraits,
 		"entity", entityTraits,
-		"biome", biomeTraits
+		"biome", biomeTraits,
+		"item", itemTraits
 	);
 	private static final SuggestionProvider<CommandSourceStack> SUGGEST_TYPES = (context, builder) -> SharedSuggestionProvider.suggest(traits.keySet(), builder);
 	private static final SuggestionProvider<CommandSourceStack> SUGGEST_TRAITS = (context, builder) -> SharedSuggestionProvider.suggest(getTraitIds(StringArgumentType.getString(context, "type")), builder);
@@ -77,6 +81,9 @@ public class JoaMama implements ModInitializer {
 		BlockStateTraits.getTheWholeThing(blockStateTraits);
 		//BlockStateTraits.getInstantUpdaterStuff(blockStateTraits);
 
+		ItemTraits.load(itemTraits, BuiltInRegistries.ITEM);
+		ItemTraits.getTheWholeThing(itemTraits);
+
 		registerSaveCommand();
 		LOGGER.info("onInitialize finished");
 	}
@@ -90,6 +97,7 @@ public class JoaMama implements ModInitializer {
 			case "blockstate" -> {return blockStateTraits.getIds();}
 			case "entity" -> {return entityTraits.getIds();}
 			case "biome" -> {return biomeTraits.getIds();}
+			case "item" -> {return itemTraits.getIds();}
 			default -> {return new HashSet<>();}
 		}
 	}
@@ -122,6 +130,7 @@ public class JoaMama implements ModInitializer {
 			case "blockstate" -> traitCollection = blockStateTraits;
 			case "entity" -> traitCollection = entityTraits;
 			case "biome" -> traitCollection = biomeTraits;
+			case "item" -> traitCollection = itemTraits;
 			default -> {
 				LOGGER.error("Unrecognized type \"" + type + "\"");
 				return 0;
