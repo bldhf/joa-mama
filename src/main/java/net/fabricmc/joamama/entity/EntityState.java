@@ -1,5 +1,7 @@
 package net.fabricmc.joamama.entity;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.SimpleState;
 import net.minecraft.client.ClientRecipeBook;
@@ -26,11 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class EntityState {
     private final EntityType<?> type;
     private final Map<Property<?>, Comparable<?>> entries;
-    private static Map<EntityType<?>, Function<EntityState, Entity>> toEntity;
+    private static Map<EntityType<?>, Supplier<Entity>> entitySuppliers;
+    private static Multimap<EntityType<?>, BiFunction<EntityState, Entity, Entity>> entityRules;
 
     public EntityState(EntityType<?> type, SimpleState state) {
         this.type = type;
@@ -50,25 +54,33 @@ public class EntityState {
     }
 
     public Entity entity() {
-        return toEntity.get(this.type).apply(this);
+        Entity entity = entitySuppliers.get(this.type).get();
+        for (BiFunction<EntityState, Entity, Entity> rule : entityRules.get(type)) {
+            entity = rule.apply(this, entity);
+        }
+        return entity;
     }
 
-    private static void registerType(EntityType<?> type, Function<EntityState, Entity> create) {
-        toEntity.put(type, create);
+    public static Entity supplyEntity(EntityType<?> type) {
+        return entitySuppliers.get(type).get();
+    }
+
+    private static void registerType(EntityType<?> type, Supplier<Entity> supplier) {
+        entitySuppliers.put(type, supplier);
     }
 
     private static void registerRule(EntityType<?> type, BiFunction<EntityState, Entity, Entity> rule) {
-        Function<EntityState, Entity> create = toEntity.get(type);
-        toEntity.put(type, state -> rule.apply(state, create.apply(state)));
+        entityRules.put(type, rule);
     }
 
     public static void load(IntegratedServer server, ServerLevel level, Minecraft client, ClientLevel clientLevel, ClientPacketListener connection, StatsCounter stats, ClientRecipeBook recipeBook) {
-        toEntity = new HashMap<>();
+        entitySuppliers = new HashMap<>();
+        entityRules = MultimapBuilder.hashKeys().hashSetValues().build();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
-                registerType(EntityType.PLAYER, state -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, false, false));
+                registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, false, false));
             } else {
-                registerType(type, state -> type.create(level));
+                registerType(type, () -> type.create(level));
                 Entity entity = type.create(level);
                 if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                     registerRule(type, EntityProperties::setBaby);

@@ -1,9 +1,6 @@
 package net.fabricmc.joamama;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Table;
+import com.google.common.collect.*;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -18,14 +15,16 @@ import java.util.function.Function;
 
 public abstract class StateTrait<O, T> implements Trait<T> {
     private static final Gson GSON = TraitsGson.gson();
-    @Expose
     private final String id;
     @Expose
     @SerializedName("property_name")
     private final String name;
     @Expose
-    @SerializedName ("property_description")
+    @SerializedName("property_description")
     private final String desc;
+    @Expose
+    @SerializedName("default_value")
+    protected T def;
     @Expose
     protected final Table<O, SimpleState, T> entries;
 
@@ -57,6 +56,10 @@ public abstract class StateTrait<O, T> implements Trait<T> {
 
     public String getDesc() {
         return this.desc;
+    }
+
+    public T getDefault() {
+        return this.def;
     }
 
     private T getTrait(O owner, SimpleState state) {
@@ -105,5 +108,30 @@ public abstract class StateTrait<O, T> implements Trait<T> {
         );
         this.entries.clear();
         this.entries.putAll(newEntries);
+    }
+
+    // TODO | 5/30/2024 | See if setDefault can be merged into simplify to save processing time.
+    protected void setDefault() {
+        Multiset<T> counts = HashMultiset.create();
+        for (Map<SimpleState, T> map : entries.rowMap().values()) {
+            if (map.size() == 1) {
+                counts.add(map.values().iterator().next());
+            }
+        }
+        Iterator<Multiset.Entry<T>> it = counts.entrySet().iterator();
+        Multiset.Entry<T> max = it.next();
+        while (it.hasNext()) {
+            Multiset.Entry<T> next = it.next();
+            if (next.getCount() > max.getCount()) {
+                max = next;
+            }
+        }
+        def = max.getElement();
+
+        Set<O> owners = new HashSet<>(entries.rowKeySet());
+        for (O owner : owners) {
+            Map<SimpleState, T> map = entries.row(owner);
+            if (map.size() == 1 && map.values().iterator().next() == def) entries.remove(owner, map.keySet().iterator().next());
+        }
     }
 }

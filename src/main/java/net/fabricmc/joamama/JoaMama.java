@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.entity.EntityStateManager;
 import net.fabricmc.joamama.entity.EntityTraits;
+import net.fabricmc.joamama.gson.TraitsGson;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
@@ -24,6 +25,7 @@ import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
@@ -54,6 +56,7 @@ public class JoaMama implements ModInitializer {
 		"biome", biomeTraits,
 		"item", itemTraits
 	);
+	public static Level LEVEL;
 	private static final SuggestionProvider<CommandSourceStack> SUGGEST_TYPES = (context, builder) -> SharedSuggestionProvider.suggest(traits.keySet(), builder);
 	private static final SuggestionProvider<CommandSourceStack> SUGGEST_TRAITS = (context, builder) -> SharedSuggestionProvider.suggest(getTraitIds(StringArgumentType.getString(context, "type")), builder);
 	/*private static final SuggestionProvider<CommandSourceStack> SUGGEST_TRAITS = (context, builder) -> {
@@ -105,6 +108,8 @@ public class JoaMama implements ModInitializer {
 	public static void onReloadResources(IntegratedServer server, ServerLevel level, Registry<Biome> biomes, Minecraft client, ClientLevel clientLevel, ClientPacketListener connection, StatsCounter stats, ClientRecipeBook recipeBook) {
 		LOGGER.info("World load mixin call successful!");
 
+		LEVEL = level;
+
 		if (!CALLED_ON_RELOAD_RESOURCES) {
 			BlockStateTraits.addBlockTagProperties(blockStateTraits, BlockTags.class);
 
@@ -143,15 +148,12 @@ public class JoaMama implements ModInitializer {
 		} else {
 			idSet = traitCollection.getIds();
 		}
+		Map<String, Trait<?>> idSetTraits = new HashMap<>();
+		for (String id : idSet) {
+			idSetTraits.put(id, traitCollection.loadTrait(id));
+		}
 		try (Writer writer = Files.newBufferedWriter(OUTPUT_PATH)) {
-			writer.write("[\n");
-			boolean first = true;
-			for (String id : idSet) {
-				if (!first) writer.write(",\n"); // still scuffed lol
-				else first = false;
-				writer.write(traitCollection.loadTrait(id).toString());
-			}
-			writer.write("]\n");
+			writer.write(TraitsGson.gson().toJson(idSetTraits));
 			writer.flush();
 			LOGGER.info("Output written to file");
 			return idSet.size();
