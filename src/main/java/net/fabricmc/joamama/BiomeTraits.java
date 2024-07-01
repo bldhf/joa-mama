@@ -47,12 +47,14 @@ public abstract class BiomeTraits {
                 "spawn_entries_monster",
                 "Spawn Entries (Monster)",
                 "",
+                "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.MONSTER)),
                 biome -> String.valueOf(biomes.getKey(biome))
         ));
         traits.add(new SimpleTrait<>(
                 "spawn_entries_creature",
                 "Spawn Entries (Creature)",
+                "",
                 "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.CREATURE)),
                 biome -> String.valueOf(biomes.getKey(biome))
@@ -61,12 +63,14 @@ public abstract class BiomeTraits {
                 "spawn_entries_ambient",
                 "Spawn Entries (Ambient)",
                 "",
+                "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.AMBIENT)),
                 biome -> String.valueOf(biomes.getKey(biome))
         ));
         traits.add(new SimpleTrait<>(
                 "spawn_entries_monster",
                 "Spawn Entries (Axolotls)",
+                "",
                 "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.AXOLOTLS)),
                 biome -> String.valueOf(biomes.getKey(biome))
@@ -75,12 +79,14 @@ public abstract class BiomeTraits {
                 "spawn_entries_underground_water_creature",
                 "Spawn Entries (Underground Water Creature)",
                 "",
+                "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.UNDERGROUND_WATER_CREATURE)),
                 biome -> String.valueOf(biomes.getKey(biome))
         ));
         traits.add(new SimpleTrait<>(
                 "spawn_entries_water_creature",
                 "Spawn Entries (Water Creature)",
+                "",
                 "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.WATER_CREATURE)),
                 biome -> String.valueOf(biomes.getKey(biome))
@@ -89,6 +95,7 @@ public abstract class BiomeTraits {
                 "spawn_entries_water_ambient",
                 "Spawn Entries (Water Ambient)",
                 "",
+                "",
                 biome -> spawnPoolToMap(biome.getMobSettings().getMobs(MobCategory.WATER_AMBIENT)),
                 biome -> String.valueOf(biomes.getKey(biome))
         ));
@@ -96,6 +103,7 @@ public abstract class BiomeTraits {
                 "default_precipitation",
                 "Default Precipitation",
                 "The default precipitation type of this biome.",
+                "",
                 biome -> !biome.hasPrecipitation()
                     ? Biome.Precipitation.NONE
                     : biome.coldEnoughToSnow(BlockPos.ZERO) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN,
@@ -105,6 +113,7 @@ public abstract class BiomeTraits {
                 "snow_height",
                 "Snow Height",
                 "The approximate height at which it starts snowing. Though unlikely, this can fluctuate by up to 8 blocks.",
+                "",
                 biome -> switch (biome.getPrecipitationAt(BlockPos.ZERO)) {
                     case NONE -> "N/A";
                     case SNOW -> "ALL";
@@ -115,6 +124,7 @@ public abstract class BiomeTraits {
         traits.add(new SimpleTrait<>(
                 "temperature",
                 "Base Temperature",
+                "",
                 "",
                 Biome::getBaseTemperature,
                 biome -> String.valueOf(biomes.getKey(biome))

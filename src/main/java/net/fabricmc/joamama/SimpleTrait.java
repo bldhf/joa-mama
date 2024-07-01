@@ -18,6 +18,7 @@ public class SimpleTrait<O, T> implements Trait<T> {
     @Expose
     @SerializedName("property_description")
     private final String desc;
+    private final String definition;
     private final Function<O, T> func;
     private final Function<O, String> toString;
     @Expose
@@ -30,18 +31,20 @@ public class SimpleTrait<O, T> implements Trait<T> {
     private SimpleTrait() {
         this.id = this.name = this.desc = null;
         this.func = null;
+        this.definition = null;
         this.toString = null;
         this.entries = null;
     }
 
-    public SimpleTrait(String id, String name, String desc, Function<O, T> func) {
-        this(id, name, desc, func, Object::toString);
+    public SimpleTrait(String id, String name, String desc, String definition, Function<O, T> func) {
+        this(id, name, desc, definition, func, Object::toString);
     }
 
-    public SimpleTrait(String id, String name, String desc, Function<O, T> func, Function<O, String> toString) {
+    public SimpleTrait(String id, String name, String desc, String definition, Function<O, T> func, Function<O, String> toString) {
         this.id = id;
         this.name = name;
         this.desc = desc;
+        this.definition = definition;
         this.func = func;
         this.toString = toString;
         this.entries = new HashMap<>();

@@ -22,6 +22,7 @@ public abstract class StateTrait<O, T> implements Trait<T> {
     @Expose
     @SerializedName("property_description")
     private final String desc;
+    private final String definition;
     @Expose
     @SerializedName("default_value")
     protected T def;
@@ -32,13 +33,15 @@ public abstract class StateTrait<O, T> implements Trait<T> {
         this.id = null;
         this.name = null;
         this.desc = null;
+        this.definition = null;
         this.entries = null;
     }
 
-    protected StateTrait (String id, String name, String desc) {
+    protected StateTrait (String id, String name, String desc, String definition) {
         this.id = id;
         this.name = name;
         this.desc = desc;
+        this.definition = definition;
         this.entries = HashBasedTable.create();
     }
 

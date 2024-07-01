@@ -10,8 +10,8 @@ import java.util.function.Function;
 public class EntityStateTrait<T> extends StateTrait<EntityType<?>, T>{
     private final Function<Entity, T> func;
 
-    public EntityStateTrait (String id, String name, String desc, Function<Entity, T> func) {
-        super(id, name, desc);
+    public EntityStateTrait (String id, String name, String desc, String definition, Function<Entity, T> func) {
+        super(id, name, desc, definition);
         this.func = func;
     }
 

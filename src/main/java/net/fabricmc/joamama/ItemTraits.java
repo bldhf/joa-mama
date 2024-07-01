@@ -39,23 +39,27 @@ public class ItemTraits {
             "stack_size",
             "Stack Size",
             "",
+            "",
             Item::getMaxStackSize
         ));
         traits.add(new SimpleTrait<>(
             "nutrition",
             "Hunger",
             "The amount of hunger granted by eating this item.",
+            "",
             item -> item.isEdible() ? item.getFoodProperties().getNutrition() : "Inedible"
         ));
         traits.add(new SimpleTrait<>(
             "saturation",
             "Saturation",
             "The amount of saturation granted by eating this item.",
+            "",
             item -> item.isEdible() ? item.getFoodProperties().getNutrition() * item.getFoodProperties().getSaturationModifier() * 2 : "Inedible"
         ));
         traits.add(new SimpleTrait<>(
             "attack_speed",
             "Attack Speed",
+            "",
             "",
             item -> getAdditionModifiers(item, Attributes.ATTACK_SPEED, EquipmentSlot.MAINHAND, 4)
         ));
@@ -63,17 +67,20 @@ public class ItemTraits {
             "attack_damage",
             "Attack Damage",
             "",
+            "",
             item -> getAdditionModifiers(item, Attributes.ATTACK_DAMAGE, EquipmentSlot.MAINHAND, 1)
         ));
         traits.add(new SimpleTrait<>(
             "damage_per_second",
             "Damage Per Second",
             "",
+            "",
             item -> getAdditionModifiers(item, Attributes.ATTACK_DAMAGE, EquipmentSlot.MAINHAND, 1) * getAdditionModifiers(item, Attributes.ATTACK_SPEED, EquipmentSlot.MAINHAND, 1)
         ));
         /*traits.add(new SimpleTrait<>(
             "breaking_speed",
             "Breaking Speed",
+            "",
             "",
             item -> getAdditionModifiers(item, Attributes., EquipmentSlot.MAINHAND, 1)
         ));*/
