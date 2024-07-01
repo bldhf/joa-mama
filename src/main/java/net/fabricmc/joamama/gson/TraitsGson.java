@@ -2,14 +2,11 @@ package net.fabricmc.joamama.gson;
 
 import com.google.common.collect.Table;
 import com.google.gson.*;
+import org.joml.RoundingMode;
+
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.Map;
-
-import net.fabricmc.joamama.JoaMama;
-import net.minecraft.world.entity.MobType;
 
 public class TraitsGson {
     private static final Gson gson = new GsonBuilder()

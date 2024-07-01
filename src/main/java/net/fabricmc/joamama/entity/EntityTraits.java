@@ -6,8 +6,11 @@ import net.fabricmc.joamama.EntityStateTrait;
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.TraitCollection;
 import net.fabricmc.joamama.mixin.EntityTypeAccessor;
+import net.fabricmc.joamama.mock.MockLevelReader;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
@@ -27,6 +30,7 @@ import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
@@ -49,8 +53,8 @@ public abstract class EntityTraits {
         EntityTraits.level = level;
     }
 
-    private static Object getAttributeValueIfPresent(Entity entity, Attribute attribute) {
-        return entity instanceof LivingEntity && ((LivingEntity) entity).getAttributes().hasAttribute(attribute) ? ((LivingEntity) entity).getAttributeValue(attribute) : "N/A";
+    private static Object getAttributeValueIfPresent(Entity entity, Holder<Attribute> holder) {
+        return entity instanceof LivingEntity && ((LivingEntity) entity).getAttributes().hasAttribute(holder) ? ((LivingEntity) entity).getAttributeValue(holder) : "N/A";
     }
 
     public static void getTheWholeThing(TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> traits) {
@@ -161,12 +165,11 @@ public abstract class EntityTraits {
             "",
             entity -> {
                 if (entity instanceof LivingEntity) {
-                    MobType mobType = ((LivingEntity) entity).getMobType();
-                    if (mobType == MobType.UNDEFINED) return "DEFAULT";
-                    else if (mobType == MobType.UNDEAD) return "UNDEAD";
-                    else if (mobType == MobType.ARTHROPOD) return "ARTHROPOD";
-                    else if (mobType == MobType.ILLAGER) return "ILLAGER";
-                    else if (mobType == MobType.WATER) return "AQUATIC";
+                    EntityType<?> mobType = entity.getType();
+                    if (mobType.is(EntityTypeTags.UNDEAD)) return "UNDEAD";
+                    else if (mobType.is(EntityTypeTags.ARTHROPOD)) return "ARTHROPOD";
+                    else if (mobType.is(EntityTypeTags.ILLAGER)) return "ILLAGER";
+                    else if (mobType.is(EntityTypeTags.AQUATIC)) return "AQUATIC";
                 }
                 return "NONE";
             }
@@ -193,7 +196,7 @@ public abstract class EntityTraits {
             entity -> {
                 if (entity instanceof Shulker) {
                     return "1.875 - (vehicle's mounted height offset)"; // TODO | 4/1/2024 | Needs extra code digging
-                } else return entity.getMyRidingOffset();
+                } else return entity.getMyRidingOffset(); // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out
             }
         ));
         traits.add(new EntityStateTrait<>(
@@ -208,7 +211,7 @@ public abstract class EntityTraits {
             "Leadable",
             "Determines whether leads can be used on this entity.",
             "",
-            entity -> entity instanceof Mob && ((Mob) entity).canBeLeashed(null)
+            entity -> entity instanceof Mob && ((Mob) entity).canBeLeashed()
         ));
         traits.add(new EntityStateTrait<>(
             "living",
@@ -241,7 +244,7 @@ public abstract class EntityTraits {
                 if (entity instanceof Camel) {
                     return "TODO"; // TODO | 4/1/2024 | Needs extra code digging
                 } else if (entity instanceof Strider) {
-                    return entity.getPassengersRidingOffset() + " ± 0.06 if its limbs are moving";
+                    return entity.getPassengersRidingOffset() + " ± 0.06 if its limbs are moving"; // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out
                 } else return entity.getPassengersRidingOffset();
             }
         ));
@@ -279,7 +282,7 @@ public abstract class EntityTraits {
                 "Immune to " + effect.getDisplayName().getString(),
                 "Whether this entity is immune to " + effect.getDisplayName().getString() + ".",
                 "",
-                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(effect, 600, 0, false, false), entity)
+                entity -> entity instanceof LivingEntity && !((LivingEntity)entity).addEffect(new MobEffectInstance(Holder.direct(effect), 600, 0, false, false), entity)
         ));}
         traits.add(new EntityStateTrait<>(
             "player_controllable",
@@ -323,7 +326,7 @@ public abstract class EntityTraits {
             "",
             entity -> {
                 if (entity instanceof LivingEntity) {
-                    Set<Integer> range = JoaMama.testRandom(() -> ((LivingEntity) entity).getExperienceReward(), 1984).keySet();
+                    Set<Integer> range = JoaMama.testRandom(() -> ((LivingEntity) entity).getExperienceReward(), 1984).keySet(); // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out
                     if (entity instanceof Zombie) {
                         JoaMama.LOGGER.error(entity.getType().toShortString());
                         for (int val : range.stream().sorted().toList()) JoaMama.LOGGER.info(String.valueOf(val));

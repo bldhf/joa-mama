@@ -141,7 +141,7 @@ public abstract class EntityProperties {
         if (entity instanceof AbstractHorse) {
             ((AbstractHorse) entity).setTamed((Boolean) state.get(IS_TAMED));
         } else if (entity instanceof TamableAnimal) {
-            ((TamableAnimal) entity).setTame((Boolean) state.get(IS_TAMED));
+            ((TamableAnimal) entity).setTame((Boolean) state.get(IS_TAMED), false /*(???)*/); // TODO | 7/1/2024 | 1.21 port: idk what that boolean does
         }
         return entity;
     }

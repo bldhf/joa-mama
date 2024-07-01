@@ -18,8 +18,8 @@ public abstract class ZombieMixin extends Monster {
 
     @Shadow public abstract boolean isBaby();
 
-    @Inject(method = "getExperienceReward", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getBaseExperienceReward", at = @At("HEAD"), cancellable = true)
     public void getExperienceReward(CallbackInfoReturnable<Integer> cir) {
-        cir.setReturnValue((this.isBaby() ? (int)((double)this.xpReward * 1.5) : 0) + super.getExperienceReward());
+        cir.setReturnValue((this.isBaby() ? (int)((double)this.xpReward * 1.5) : 0) + super.getBaseExperienceReward());
     }
 }

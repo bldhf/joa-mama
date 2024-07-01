@@ -12,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
@@ -320,7 +320,7 @@ public abstract class BlockStateTraits {
             "Supports Redstone Dust",
             "Whether redstone dust (\"wire\") can be placed on top of this block.",
             "net.minecraft.world.level.block.RedStoneWireBlock#canSurviveOn",
-            (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
+            (state) -> ((RedStoneWireBlockAccessor) (Object) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
         ));
         traits.add(new SimpleTrait<>(
             "gets_flushed",
@@ -725,8 +725,7 @@ public abstract class BlockStateTraits {
             "Whether raids can spawn on this block.",
             "",
             (state) ->
-                    NaturalSpawner.isSpawnPositionOk(
-                            SpawnPlacements.Type.ON_GROUND,
+                    SpawnPlacementTypes.ON_GROUND.isSpawnPositionOk(
                             new MockMultiBlockLevelReader(Map.of(
                                     BlockPos.ZERO.above(),  Blocks.AIR.defaultBlockState(),
                                     BlockPos.ZERO,          Blocks.AIR.defaultBlockState(),
