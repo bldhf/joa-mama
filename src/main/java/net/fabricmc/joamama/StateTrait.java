@@ -129,12 +129,17 @@ public abstract class StateTrait<O, T> implements Trait<T> {
                 max = next;
             }
         }
-        def = max.getElement();
+        if(max.getCount() == 1) {
+            def = null;
+        } else {
+            def = max.getElement();
 
-        Set<O> owners = new HashSet<>(entries.rowKeySet());
-        for (O owner : owners) {
-            Map<SimpleState, T> map = entries.row(owner);
-            if (map.size() == 1 && map.values().iterator().next() == def) entries.remove(owner, map.keySet().iterator().next());
+            Set<O> owners = new HashSet<>(entries.rowKeySet());
+            for (O owner : owners) {
+                Map<SimpleState, T> map = entries.row(owner);
+                if (map.size() == 1 && map.values().iterator().next() == def)
+                    entries.remove(owner, map.keySet().iterator().next());
+            }
         }
     }
 }

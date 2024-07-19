@@ -21,7 +21,7 @@ public class ItemTraits {
         //ItemTraits.items = items;
     }
 
-    private static double getAdditionModifiers(Item item, Holder<Attribute> holder, double base) { // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out. Original is commented out below.
+    /*private static double getAdditionModifiers(Item item, Holder<Attribute> holder, double base) { // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out. Original is commented out below.
         Multimap<Holder<Attribute>, AttributeModifier> attributes = item.getDefaultAttributeModifiers();
         if (attributes.containsKey(holder)) {
             Collection<AttributeModifier> modifiers = attributes.get(holder);
@@ -35,7 +35,7 @@ public class ItemTraits {
             }
         }
         return base;
-    }
+    }*/
     /*
     private static double getAdditionModifiers(Item item, Attribute attribute, EquipmentSlot slot, double base) {
         Multimap<Attribute, AttributeModifier> attributes = item.getDefaultAttributeModifiers(slot);
@@ -86,6 +86,7 @@ public class ItemTraits {
                         : foodProperties.nutrition() * foodProperties.saturation();
             }
         ));
+        /*
         traits.add(new SimpleTrait<>(
             "attack_speed",
             "Attack Speed",
@@ -107,6 +108,7 @@ public class ItemTraits {
             "",
             item -> getAdditionModifiers(item, Attributes.ATTACK_DAMAGE, EquipmentSlot.MAINHAND, 1) * getAdditionModifiers(item, Attributes.ATTACK_SPEED, EquipmentSlot.MAINHAND, 1)
         ));
+        */
         /*traits.add(new SimpleTrait<>(
             "breaking_speed",
             "Breaking Speed",

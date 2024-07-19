@@ -126,7 +126,7 @@ public class JoaMama implements ModInitializer {
 			LOGGER.info("Finished loading traits");
 		}
 
-		// save("entity", "immune_to_arrows")
+		 save("entity");
 	}
 
 	private static int save(String type, String ... ids) {

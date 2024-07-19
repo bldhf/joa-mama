@@ -5,10 +5,11 @@ import com.google.common.collect.SetMultimap;
 import net.fabricmc.joamama.EntityStateTrait;
 import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.TraitCollection;
+import net.fabricmc.joamama.mixin.EntityAccessor;
 import net.fabricmc.joamama.mixin.EntityTypeAccessor;
-import net.fabricmc.joamama.mock.MockLevelReader;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.effect.MobEffect;
@@ -30,7 +31,6 @@ import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.raid.Raider;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
@@ -58,6 +58,13 @@ public abstract class EntityTraits {
     }
 
     public static void getTheWholeThing(TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> traits) {
+        traits.add(new EntityStateTrait<>(
+                "id",
+                "ID",
+                "",
+                "",
+                entity -> BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getPath()
+        ));
         traits.add(new EntityStateTrait<>(
             "width",
             "Width",
@@ -157,6 +164,7 @@ public abstract class EntityTraits {
                     && !(entity instanceof Player)
                     && !(entity instanceof IronGolem)
                     && !(entity instanceof AbstractMinecart)
+                    && ((EntityAccessor) entity).invokeCanRide(entity) // the entity passed as an argument doesn't actually matter
         ));
         traits.add(new EntityStateTrait<>(
             "entity_group",
@@ -188,6 +196,7 @@ public abstract class EntityTraits {
             "",
             Entity::fireImmune
         ));
+        /*
         traits.add(new EntityStateTrait<>(
             "height_offset",
             "Riding Offset (Self)",
@@ -199,6 +208,7 @@ public abstract class EntityTraits {
                 } else return entity.getMyRidingOffset(); // TODO | 7/1/2024 | 1.21 port: couldn't figure this one out
             }
         ));
+         */
         traits.add(new EntityStateTrait<>(
             "hurt_by_water",
             "Hurt By Water",
@@ -235,6 +245,7 @@ public abstract class EntityTraits {
                 } else return "N/A";
             }
         ));
+        /*
         traits.add(new EntityStateTrait<>(
             "mounted_height_offset",
             "Riding Offset (Passenger)",
@@ -248,9 +259,10 @@ public abstract class EntityTraits {
                 } else return entity.getPassengersRidingOffset();
             }
         ));
+         */
         traits.add(new EntityStateTrait<>(
-            "savable",
-            "Savable",
+            "saved_on_reload",
+            "Saved On Reload",
             "Whether this is saved to the world. Entities that are not savable are lost when unloaded.",
             "",
             entity -> entity.getType().canSerialize()
@@ -306,7 +318,7 @@ public abstract class EntityTraits {
             entity -> entity instanceof Raider
         ));
         traits.add(new EntityStateTrait<>(
-            "category",
+            "mob_category",
             "Mob Category",
             "Determines what mob cap this entity uses when spawning.",
             "",
@@ -319,6 +331,7 @@ public abstract class EntityTraits {
             "",
             entity -> entity instanceof Zombie
         ));
+        /*
         traits.add(new EntityStateTrait<>(
             "xp",
             "Experience Dropped",
@@ -337,6 +350,7 @@ public abstract class EntityTraits {
                 } else return 0;
             }
         ));
+         */
     }
 
     public static void getDamageImmunities(TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> traits) {
