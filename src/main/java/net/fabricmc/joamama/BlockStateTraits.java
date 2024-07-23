@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -72,6 +73,13 @@ public abstract class BlockStateTraits {
     }
 
     public static void getTheWholeThing(TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> traits) {
+        /*traits.add(new SimpleTrait<>(
+                "block_id",
+                "Block ID",
+                "",
+                "",
+                (state) -> state.toString()
+        ));*/
         traits.add(new SimpleTrait<>(
             "hardness",
             "Hardness",
@@ -88,7 +96,7 @@ public abstract class BlockStateTraits {
             "Blast Resistance",
             "Determines how likely the block is to break from exposure to an explosion.",
             "net.minecraft.world.level.block.Block#getExplosionResistance",
-            (state) -> state.getBlock().getExplosionResistance()
+            (state) -> Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance())
         ));
         traits.add(new SimpleTrait<>(
             "luminance",
@@ -109,13 +117,19 @@ public abstract class BlockStateTraits {
             "Movable",
             "Whether the block can be pushed by a piston, stops the piston from extending, or whether attempting to push it destroys the block.",
             "",
-            // TODO: this does not account for block entities
-            state -> switch (state.getPistonPushReaction()) {
-                case NORMAL, PUSH_ONLY -> "Yes";
-                case BLOCK -> "No";
-                case DESTROY -> "Breaks";
-                case IGNORE -> null;
+            // TODO: this does not properly account for block entities (e.g. beds and bells break).
+            // TODO: Also, bedrock, crying obsidian, end portal frame, light block, ++ are wrong
+            state -> { if(state.getBlock() instanceof EntityBlock) {
+                return "No";
+            } else {
+                return switch (state.getPistonPushReaction()) {
+                    case NORMAL, PUSH_ONLY -> "Yes";
+                    case BLOCK -> "No";
+                    case DESTROY -> "Breaks";
+                    case IGNORE -> null;
+                };
             }
+        }
         ));
         traits.add(new SimpleTrait<>(
             "sticky",
@@ -441,7 +455,7 @@ public abstract class BlockStateTraits {
         traits.add(new SimpleTrait<>(
             "collision_bottom_all",
             "Collision Bottom (All)",
-            "The block's upwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
+            "The block's downwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
             "",
             (state) -> state.getCollisionShape(
                     new MockBlockGetter(state),
@@ -452,16 +466,16 @@ public abstract class BlockStateTraits {
         traits.add(new SimpleTrait<>(
             "block_render_type",
             "Block Render Type",
-            "TODO",
-            "",
-            (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString()
+            "Which block render type the block uses.",
+            "net.minecraft.client.renderer.ItemBlockRenderTypes.getChunkRenderType",
+            (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString().split("\\[")[1].split(":")[0]
         ));
         traits.add(new SimpleTrait<>(
             "fluid_render_type",
             "Fluid Render Type",
-            "TODO",
+            "Which fluid render type the block uses.",
             "",
-            (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString()
+            (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString().split("\\[")[1].split(":")[0]
         ));
         traits.add(new SimpleTrait<>(
             "blocks_skylight",
@@ -547,13 +561,13 @@ public abstract class BlockStateTraits {
                 //                                                                       B
             )
         ));
-        traits.add(new SimpleTrait<>(
+        /*traits.add(new SimpleTrait<>(
             "spawnable_in",
             "Spawnable In",
             "Whether mobs can spawn in this block.",
             "",
             (state) -> ""
-        ));
+        ));*/
     }
 
     public static void getInstantUpdaterStuff(TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> traits) {
@@ -619,7 +633,7 @@ public abstract class BlockStateTraits {
     }
 
     public static <T> void addBlockTagProperties(TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> traits, Class<T> clazz) {
-        /*for (Field staticField : clazz.getDeclaredFields()) {
+        for (Field staticField : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(staticField.getModifiers())) {
                 try {
                     @SuppressWarnings("unchecked")
@@ -628,14 +642,14 @@ public abstract class BlockStateTraits {
                             "tag_" + staticField.getName().toLowerCase(),
                             "Tag: " + staticField.getName(),
                             "" + staticField.getName(),
-                            (state) -> state.is(tag),
-                            blockStates
+                            "",
+                            (state) -> state.is(tag)
                     ));
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
-        }*/
+        }
         traits.add(new SimpleTrait<>(
             "dragon_immune",
             "Dragon Immune",

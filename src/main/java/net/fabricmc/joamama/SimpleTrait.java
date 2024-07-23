@@ -18,6 +18,7 @@ public class SimpleTrait<O, T> implements Trait<T> {
     @Expose
     @SerializedName("property_description")
     private final String desc;
+    @Expose
     private final String definition;
     private final Function<O, T> func;
     private final Function<O, String> toString;

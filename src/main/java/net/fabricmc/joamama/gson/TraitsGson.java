@@ -47,7 +47,7 @@ public class TraitsGson {
 
     private static class NumberSerializer implements JsonSerializer<Number> {
         public JsonElement serialize(Number source, Type type, JsonSerializationContext context) {
-            return new JsonPrimitive(BigDecimal.valueOf(source.doubleValue()).setScale(6, RoundingMode.HALF_EVEN).stripTrailingZeros());
+            return new JsonPrimitive(BigDecimal.valueOf(source.doubleValue()).setScale(6, RoundingMode.HALF_UP).stripTrailingZeros());
         }
     }
 }

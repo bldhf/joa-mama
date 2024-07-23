@@ -89,6 +89,7 @@ public class JoaMama implements ModInitializer {
 
 		registerSaveCommand();
 		LOGGER.info("onInitialize finished");
+		save("blockstate", "movable");
 	}
 
 	public static Collection<String> getTypes() {
@@ -126,7 +127,7 @@ public class JoaMama implements ModInitializer {
 			LOGGER.info("Finished loading traits");
 		}
 
-		 save("entity");
+		save("blockstate");
 	}
 
 	private static int save(String type, String ... ids) {
