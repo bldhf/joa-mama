@@ -1,5 +1,6 @@
 package net.fabricmc.joamama.mixin;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Zombie;
@@ -19,7 +20,7 @@ public abstract class ZombieMixin extends Monster {
     @Shadow public abstract boolean isBaby();
 
     @Inject(method = "getBaseExperienceReward", at = @At("HEAD"), cancellable = true)
-    public void getExperienceReward(CallbackInfoReturnable<Integer> cir) {
-        cir.setReturnValue((this.isBaby() ? (int)((double)this.xpReward * 1.5) : 0) + super.getBaseExperienceReward());
+    public void getExperienceReward(ServerLevel serverLevel, CallbackInfoReturnable<Integer> cir) {
+        cir.setReturnValue((this.isBaby() ? (int)((double)this.xpReward * 1.5) : 0) + super.getBaseExperienceReward(serverLevel));
     }
 }

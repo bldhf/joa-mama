@@ -150,7 +150,7 @@ public abstract class EntityTraits {
             "Whether this entity will ride boats when pushed by them.",
             "",
             entity -> entity.isPushable()
-                    && entity.getBbWidth() < EntityType.BOAT.getWidth()
+                    && entity.getBbWidth() < EntityType.OAK_BOAT.getWidth()
                     && entity instanceof LivingEntity
                     && !(entity instanceof WaterAnimal)
                     && !(entity instanceof Player)
@@ -355,14 +355,14 @@ public abstract class EntityTraits {
 
     public static void getDamageImmunities(TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> traits) {
         // FIXME | 3/30/2024 | Damage immunity properties are broken for players because they require a ServerPlayer rather than a LocalPlayer
-        Arrow arrow = EntityType.ARROW.create(level);
+        Arrow arrow = EntityType.ARROW.create(level, EntitySpawnReason.COMMAND);
 
         traits.add(new EntityStateTrait<>(
             "immune_to_arrows",
             "Immune to Arrows and Tridents",
             "Whether this entity is immune to arrows and tridents. These entities will deflect arrows and tridents that hit them. Endermen will only do this if they fail to teleport when hit.",
             "",
-            entity -> entity instanceof EnderMan || !entity.hurt(arrow.damageSources().arrow(arrow, arrow), 1984)
+            entity -> entity instanceof EnderMan || !entity.hurtOrSimulate(arrow.damageSources().arrow(arrow, arrow), 1984)
         ));
     }
 }

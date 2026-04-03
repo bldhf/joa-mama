@@ -44,7 +44,6 @@ public abstract class EntityProperties {
     public static final EnumProperty<SlimeSize> SLIME_SIZE = EnumProperty.create("size", SlimeSize.class);
     public static final BooleanProperty SMALL = BooleanProperty.create("small");
     public static final BooleanProperty IS_TAMED = BooleanProperty.create("is_tamed");
-    public static final EnumProperty<Boat.Type> BOAT_VARIANT = EnumProperty.create("variant", Boat.Type.class);
     public static final EnumProperty<Panda.Gene> PANDA_VARIANT = EnumProperty.create("variant", Panda.Gene.class);
 
     public static Entity setArmorStandFlags(EntityState state, Entity entity) {
@@ -147,9 +146,7 @@ public abstract class EntityProperties {
     }
 
     public static Entity setVariant(EntityState state, Entity entity) {
-        if (entity instanceof Boat) {
-            ((Boat) entity).setVariant((Boat.Type) state.get(BOAT_VARIANT));
-        } else if (entity instanceof Panda) {
+        if (entity instanceof Panda) {
             ((Panda) entity).setMainGene((Panda.Gene) state.get(PANDA_VARIANT));
             ((Panda) entity).setHiddenGene((Panda.Gene) state.get(PANDA_VARIANT));
         }

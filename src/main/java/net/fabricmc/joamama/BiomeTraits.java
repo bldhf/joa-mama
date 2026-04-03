@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class BiomeTraits {
+
+    static int OVERWORLD_SEA_LEVEL = 63; // not sure if it's actually 62 or 63, probably doesn't matter.
+
     private static Registry<Biome> biomes;
 
     public static void load(TraitCollection<SimpleTrait<Biome, ?>, Registry<Biome>> traits, Registry<Biome> biomes) {
@@ -106,20 +109,20 @@ public abstract class BiomeTraits {
                 "",
                 biome -> !biome.hasPrecipitation()
                     ? Biome.Precipitation.NONE
-                    : biome.coldEnoughToSnow(BlockPos.ZERO) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN,
-                biome -> String.valueOf(biomes.getId(biome))
+                    : biome.coldEnoughToSnow(BlockPos.ZERO, OVERWORLD_SEA_LEVEL) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN,
+                biome -> String.valueOf(biomes.getKey(biome))
         ));
         traits.add(new SimpleTrait<>(
                 "snow_height",
                 "Snow Height",
                 "The approximate height at which it starts snowing. Though unlikely, this can fluctuate by up to 8 blocks.",
                 "",
-                biome -> switch (biome.getPrecipitationAt(BlockPos.ZERO)) {
+                biome -> switch (biome.getPrecipitationAt(BlockPos.ZERO, OVERWORLD_SEA_LEVEL)) {
                     case NONE -> "N/A";
                     case SNOW -> "ALL";
                     case RAIN -> biome.getBaseTemperature() < 0.15 ? "ALL" : (int) (biome.getBaseTemperature() * 800 - 40);
                 },
-                biome -> String.valueOf(biomes.getId(biome))
+                biome -> String.valueOf(biomes.getKey(biome))
         ));
         traits.add(new SimpleTrait<>(
                 "temperature",

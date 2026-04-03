@@ -45,6 +45,11 @@ public record MockCollisionGetter (BlockState state) implements CollisionGetter 
         throw new AssertionError();
     }
 
+    @Override
+    public int getMinY() {
+        return 0;
+    }
+
     @Deprecated
     public int getMinBuildHeight() {
         throw new AssertionError();

@@ -16,7 +16,7 @@ public class EntityStateTrait<T> extends StateTrait<EntityType<?>, T>{
     }
 
     public void load(SetMultimap<EntityType<?>, EntityState> entries) {
-        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), func.apply(state.entity())));
+        entries.forEach((owner, state) -> this.entries.put(owner, new SimpleState(state.getEntries()), this.func.apply(state.entity())));
         this.simplify();
         this.setDefault();
     }

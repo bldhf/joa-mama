@@ -25,6 +25,11 @@ public record MockBlockGetter (BlockState state) implements BlockGetter {
         throw new AssertionError();
     }
 
+    @Override
+    public int getMinY() {
+        return 0;
+    }
+
     @Deprecated
     public int getMinBuildHeight () {
         throw new AssertionError();

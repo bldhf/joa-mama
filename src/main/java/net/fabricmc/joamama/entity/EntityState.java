@@ -13,10 +13,7 @@ import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.StatsCounter;
-import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zoglin;
@@ -80,8 +77,8 @@ public class EntityState {
             if (type == EntityType.PLAYER) {
                 registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, false, false));
             } else {
-                registerType(type, () -> type.create(level));
-                Entity entity = type.create(level);
+                registerType(type, () -> type.create(level, EntitySpawnReason.COMMAND)); // TODO | 12/1/2024 | 1.21.3 port: does this have side effects? iirc command spawning affects endermite despawn, possibly other things
+                Entity entity = type.create(level, EntitySpawnReason.COMMAND);           // ^
                 if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                     registerRule(type, EntityProperties::setBaby);
                 }
@@ -94,8 +91,6 @@ public class EntityState {
             }
         }
         registerRule(EntityType.ARMOR_STAND, EntityProperties::setArmorStandFlags);
-        registerRule(EntityType.BOAT, EntityProperties::setVariant);
-        registerRule(EntityType.CHEST_BOAT, EntityProperties::setVariant);
         registerRule(EntityType.CAMEL, EntityProperties::setPose);
         registerRule(EntityType.CHICKEN, EntityProperties::setJockey);
         registerRule(EntityType.ENDER_DRAGON, EntityProperties::setPhase);

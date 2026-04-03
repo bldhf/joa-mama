@@ -30,7 +30,7 @@ public abstract class ReloadMixin {
         if ((Object) this instanceof IntegratedServer server) {
             ServerLevel world = server.getLevel(Level.OVERWORLD);
 
-            Registry<Biome> biomes = server.registries().compositeAccess().registryOrThrow(Registries.BIOME);
+            Registry<Biome> biomes = server.registries().compositeAccess().lookupOrThrow(Registries.BIOME);
 
             Minecraft client = ((IntegratedServerAccessor) server).getMinecraft();
             ClientLevel clientWorld = client.level;

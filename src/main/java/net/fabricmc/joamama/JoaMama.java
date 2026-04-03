@@ -27,6 +27,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class JoaMama implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
 	private static final Path OUTPUT_PATH = FabricLoader.getInstance().getConfigDir().resolve("output").resolve("output.json");
 	private static boolean CALLED_ON_RELOAD_RESOURCES = false;
-	private static final TraitCollection<SimpleTrait<BlockState, ?>, Iterable<BlockState>> blockStateTraits = new TraitCollection<>(SimpleTrait::load);
+	private static final TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> blockStateTraits = new TraitCollection<>(BlockStateTrait::load);
 	private static final TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> entityTraits = new TraitCollection<>(EntityStateTrait::load);
 	private static final TraitCollection<SimpleTrait<Biome, ?>, Registry<Biome>> biomeTraits = new TraitCollection<>(SimpleTrait::load);
 	private static final TraitCollection<SimpleTrait<Item, ?>, Registry<Item>> itemTraits = new TraitCollection<>(SimpleTrait::load);
@@ -80,16 +81,12 @@ public class JoaMama implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("onInitialize called");
 
-		BlockStateTraits.load(blockStateTraits);
-		BlockStateTraits.getTheWholeThing(blockStateTraits);
-		//BlockStateTraits.getInstantUpdaterStuff(blockStateTraits);
-
 		ItemTraits.load(itemTraits, BuiltInRegistries.ITEM);
 		ItemTraits.getTheWholeThing(itemTraits);
 
 		registerSaveCommand();
 		LOGGER.info("onInitialize finished");
-		save("blockstate", "movable");
+		// save("blockstate");
 	}
 
 	public static Collection<String> getTypes() {
@@ -112,6 +109,8 @@ public class JoaMama implements ModInitializer {
 		LEVEL = level;
 
 		if (!CALLED_ON_RELOAD_RESOURCES) {
+			BlockStateTraits.load(blockStateTraits);
+			BlockStateTraits.getTheWholeThing(blockStateTraits);
 			BlockStateTraits.addBlockTagProperties(blockStateTraits, BlockTags.class);
 
 			EntityStateManager.load(level);

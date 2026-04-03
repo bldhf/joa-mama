@@ -2,10 +2,7 @@ package net.fabricmc.joamama.entity;
 
 import net.fabricmc.joamama.SimpleStateManager;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zoglin;
@@ -39,7 +36,7 @@ public class EntityStateManager {
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             entityProperties.put(type, new HashSet<>());
             if (type == EntityType.PLAYER) continue;
-            Entity entity = type.create(level);
+            Entity entity = type.create(level, EntitySpawnReason.COMMAND); // TODO | 12/1/2024 | 1.21.3 port: does this have side effects? iirc command spawning affects endermite despawning, possibly other things
             if (entity instanceof AgeableMob || entity instanceof Piglin || entity instanceof Zoglin || entity instanceof Zombie) {
                 entityProperties.get(type).add(EntityProperties.IS_BABY);
             }
@@ -51,8 +48,6 @@ public class EntityStateManager {
             }
         }
         entityProperties.get(EntityType.ARMOR_STAND).addAll(Set.of(EntityProperties.MARKER, EntityProperties.SMALL));
-        entityProperties.get(EntityType.BOAT).add(EntityProperties.BOAT_VARIANT);
-        entityProperties.get(EntityType.CHEST_BOAT).add(EntityProperties.BOAT_VARIANT);
         entityProperties.get(EntityType.CAMEL).add(EntityProperties.CAMEL_POSE);
         entityProperties.get(EntityType.CHICKEN).add(EntityProperties.IS_CHICKEN_JOCKEY);
         entityProperties.get(EntityType.ENDER_DRAGON).add(EntityProperties.DRAGON_PHASE);
