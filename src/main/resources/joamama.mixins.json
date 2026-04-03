@@ -15,6 +15,7 @@
     "ReloadMixin",
     "ShulkerAccessor",
     "SpreadableBlockAccessor",
+    "WalkNodeEvaluatorAccessor",
     "WallBlockAccessor",
     "ZombieMixin"
   ],

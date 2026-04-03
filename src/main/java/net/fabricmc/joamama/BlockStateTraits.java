@@ -752,6 +752,20 @@ public abstract class BlockStateTraits {
                                 EntityType.RAVAGER
                         ) || state.is(Blocks.SNOW)
         ));
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_type",
+                "Pathfinding Type",
+                "",
+                "net.minecraft.world.level.pathfinder.WalkNodeEvaluator.getPathTypeFromState",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_penalty",
+                "Pathfinding Penalty",
+                "",
+                "net.minecraft.world.level.pathfinder.PathType.getMalus",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
+        ));
     }
 
     public static JsonArray jsonArrayFromStream(Stream<Double> arr) {
