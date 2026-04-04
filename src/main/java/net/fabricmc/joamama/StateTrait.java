@@ -4,14 +4,9 @@ import com.google.common.collect.*;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import net.fabricmc.joamama.entity.EntityState;
 import net.fabricmc.joamama.gson.TraitsGson;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.state.StateHolder;
 import net.minecraft.world.level.block.state.properties.Property;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public abstract class StateTrait<O, T> implements Trait<T> {
     private static final Gson GSON = TraitsGson.gson();
@@ -25,7 +20,7 @@ public abstract class StateTrait<O, T> implements Trait<T> {
     private final String definition;
     @Expose
     @SerializedName("default_value")
-    protected T def;
+    protected T default_value;
     @Expose
     protected final Table<O, SimpleState, T> entries;
 
@@ -62,7 +57,7 @@ public abstract class StateTrait<O, T> implements Trait<T> {
     }
 
     public T getDefault() {
-        return this.def;
+        return this.default_value;
     }
 
     private T getTrait(O owner, SimpleState state) {
@@ -116,28 +111,28 @@ public abstract class StateTrait<O, T> implements Trait<T> {
     // TODO | 5/30/2024 | See if setDefault can be merged into simplify to save processing time.
     protected void setDefault() {
         Multiset<T> counts = HashMultiset.create();
-        for (Map<SimpleState, T> map : entries.rowMap().values()) {
-            if (map.size() == 1) {
-                counts.add(map.values().iterator().next());
+        for (Map<SimpleState, T> statesMap : entries.rowMap().values()) {
+            if (statesMap.size() == 1) {
+                counts.add(statesMap.values().iterator().next());
             }
         }
         Iterator<Multiset.Entry<T>> it = counts.entrySet().iterator();
-        Multiset.Entry<T> max = it.next();
+        Multiset.Entry<T> mostCommon = it.next();
         while (it.hasNext()) {
             Multiset.Entry<T> next = it.next();
-            if (next.getCount() > max.getCount()) {
-                max = next;
+            if (next.getCount() > mostCommon.getCount()) {
+                mostCommon = next;
             }
         }
-        if(max.getCount() == 1) {
-            def = null;
+        if(mostCommon.getCount() == 1) {
+            default_value = null;
         } else {
-            def = max.getElement();
+            default_value = mostCommon.getElement();
 
             Set<O> owners = new HashSet<>(entries.rowKeySet());
             for (O owner : owners) {
                 Map<SimpleState, T> map = entries.row(owner);
-                if (map.size() == 1 && map.values().iterator().next() == def)
+                if (map.size() == 1 && map.containsValue(default_value))
                     entries.remove(owner, map.keySet().iterator().next());
             }
         }
