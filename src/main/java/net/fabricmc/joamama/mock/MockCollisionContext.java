@@ -9,7 +9,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public record MockCollisionContext (boolean descending, boolean isAbove, boolean isHolding, boolean canWalkOnFluid) implements CollisionContext {
+public record MockCollisionContext (boolean descending, boolean isAbove, boolean isHolding, boolean alwaysCollideWithFlud, boolean canWalkOnFluid) implements CollisionContext {
     public static CollisionContext empty() { return CollisionContext.empty(); }
 
     public static CollisionContext of(Entity entity) {
@@ -21,6 +21,8 @@ public record MockCollisionContext (boolean descending, boolean isAbove, boolean
     public boolean isAbove(VoxelShape var1, BlockPos var2, boolean var3) { return isAbove; }
 
     public boolean isHoldingItem(Item var1) { return isHolding; }
+
+    public boolean alwaysCollideWithFluid() { return alwaysCollideWithFlud; }
 
     public boolean canStandOnFluid(FluidState var1, FluidState var2) { return canWalkOnFluid; }
 

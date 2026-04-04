@@ -1,30 +1,39 @@
 package net.fabricmc.joamama.entity;
 
 import net.fabricmc.joamama.JoaMama;
+import net.fabricmc.joamama.mixin.ArmorStandInvoker;
 import net.fabricmc.joamama.mixin.ShulkerAccessor;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.*;
 import net.minecraft.world.entity.animal.camel.Camel;
+import net.minecraft.world.entity.animal.chicken.Chicken;
+import net.minecraft.world.entity.animal.fish.Pufferfish;
 import net.minecraft.world.entity.animal.goat.Goat;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
+import net.minecraft.world.entity.animal.golem.SnowGolem;
+import net.minecraft.world.entity.animal.panda.Panda;
+import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zoglin;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.entity.monster.warden.Warden;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.storage.TagValueInput;
+
+import static net.fabricmc.joamama.JoaMama.LOGGER;
 
 public abstract class EntityProperties {
     public static final BooleanProperty IS_BABY = BooleanProperty.create("is_baby");
@@ -51,7 +60,13 @@ public abstract class EntityProperties {
             CompoundTag nbt = new CompoundTag();
             nbt.putBoolean("Marker", (Boolean) state.get(MARKER));
             nbt.putBoolean("Small", (Boolean) state.get(SMALL));
-            ((ArmorStand) entity).readAdditionalSaveData(nbt);
+
+            // TODO | 2026-04-04 | is all this bs really necessary? this is how the game deals with the new readAdditionalSaveData input param
+            try (ProblemReporter.ScopedCollector scopedCollector = new ProblemReporter.ScopedCollector(entity.problemPath(), LOGGER)) {
+                var valueInput = TagValueInput.create(scopedCollector, entity.registryAccess(), nbt);
+
+                ((ArmorStandInvoker) entity).invokeReadAdditionalSaveData(valueInput);
+            }
         }
         return entity;
     }

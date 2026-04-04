@@ -21,6 +21,8 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
@@ -166,7 +168,7 @@ public class JoaMama implements ModInitializer {
 	private static void registerSaveCommand() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(
 			Commands.literal("save")
-				.requires(commandSourceStack -> commandSourceStack.hasPermission(4))
+				.requires(commandSourceStack -> commandSourceStack.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.OWNERS)))
 				.then(
 					Commands.argument("type", StringArgumentType.string())
 						.suggests(SUGGEST_TYPES)

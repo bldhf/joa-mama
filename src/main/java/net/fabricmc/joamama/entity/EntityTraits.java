@@ -18,23 +18,22 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Bucketable;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.animal.WaterAnimal;
-import net.minecraft.world.entity.animal.camel.Camel;
-import net.minecraft.world.entity.animal.horse.AbstractChestedHorse;
-import net.minecraft.world.entity.animal.horse.Horse;
-import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.fish.WaterAnimal;
+import net.minecraft.world.entity.animal.equine.AbstractChestedHorse;
+import net.minecraft.world.entity.animal.equine.Horse;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.entity.raid.Raider;
-import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Collections;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class EntityTraits {
@@ -126,7 +125,7 @@ public abstract class EntityTraits {
             "Can Be Saddled",
             "Determines whether this entity can equip saddles.",
             "",
-            entity -> entity instanceof Saddleable && ((Saddleable) entity).isSaddleable()
+            entity -> entity instanceof PlayerRideable && entity.asLivingEntity().canUseSlot(EquipmentSlot.SADDLE) // TODO | 2026-04-04 | unsure of this one
         ));
         traits.add(new EntityStateTrait<>(
             "can_breathe_in_water",

@@ -2,7 +2,6 @@ package net.fabricmc.joamama.entity;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import net.fabricmc.joamama.JoaMama;
 import net.fabricmc.joamama.SimpleState;
 import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
@@ -14,17 +13,16 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zoglin;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.piglin.Piglin;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.level.block.state.properties.Property;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class EntityState {
@@ -75,7 +73,7 @@ public class EntityState {
         entityRules = MultimapBuilder.hashKeys().hashSetValues().build();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
-                registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, false, false));
+                registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, new Input(false, false, false, false, false, false, false), false));
             } else {
                 registerType(type, () -> type.create(level, EntitySpawnReason.COMMAND)); // TODO | 12/1/2024 | 1.21.3 port: does this have side effects? iirc command spawning affects endermite despawn, possibly other things
                 Entity entity = type.create(level, EntitySpawnReason.COMMAND);           // ^

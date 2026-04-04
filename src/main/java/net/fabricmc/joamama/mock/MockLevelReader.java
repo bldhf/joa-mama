@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.world.attribute.EnvironmentAttributeReader;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.LevelReader;
@@ -106,4 +107,6 @@ public record MockLevelReader (BlockState state) implements LevelReader {
     public FluidState getFluidState (BlockPos pos) {
         return this.state.getFluidState();
     }
+
+    public EnvironmentAttributeReader environmentAttributes() { throw new AssertionError(); }
 }

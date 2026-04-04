@@ -343,7 +343,7 @@ public abstract class BlockStateTraits {
                 "Supports Redstone Dust",
                 "Whether redstone dust (\"wire\") can be placed on top of this block.",
                 "net.minecraft.world.level.block.RedStoneWireBlock#canSurviveOn",
-                (state) -> ((RedStoneWireBlockAccessor) (Object) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
+                (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
         ));
         traits.add(new BlockStateTrait<>(
                 "gets_flushed1",
@@ -431,7 +431,7 @@ public abstract class BlockStateTraits {
                 (state) -> state.getCollisionShape(
                         new MockBlockGetter(state),
                         BlockPos.ZERO,
-                        new MockCollisionContext(true, true, true, true)
+                        new MockCollisionContext(true, true, true, true, true)
                 ).toAabbs().stream().map(box -> box.maxY * 16).distinct().toArray()
         ));
         traits.add(new BlockStateTrait<>(
@@ -447,7 +447,7 @@ public abstract class BlockStateTraits {
                                     state.getCollisionShape(
                                             new MockBlockGetter(state),
                                             BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true)
+                                            new MockCollisionContext(true, true, true, true, true)
                                     ).toAabbs().stream().map(box -> (1 - box.minZ) * 16).distinct()
                             )
                     );
@@ -457,7 +457,7 @@ public abstract class BlockStateTraits {
                                     state.getCollisionShape(
                                             new MockBlockGetter(state),
                                             BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true)
+                                            new MockCollisionContext(true, true, true, true, true)
                                     ).toAabbs().stream().map(box -> box.maxZ * 16).distinct()
                             )
                     );
@@ -467,7 +467,7 @@ public abstract class BlockStateTraits {
                                     state.getCollisionShape(
                                             new MockBlockGetter(state),
                                             BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true)
+                                            new MockCollisionContext(true, true, true, true, true)
                                     ).toAabbs().stream().map(box -> (1 - box.minX) * 16).distinct()
                             )
                     );
@@ -477,7 +477,7 @@ public abstract class BlockStateTraits {
                                     state.getCollisionShape(
                                             new MockBlockGetter(state),
                                             BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true)
+                                            new MockCollisionContext(true, true, true, true, true)
                                     ).toAabbs().stream().map(box -> box.maxX * 16).distinct()
                             )
                     );
@@ -492,7 +492,7 @@ public abstract class BlockStateTraits {
                 (state) -> state.getCollisionShape(
                         new MockBlockGetter(state),
                         BlockPos.ZERO,
-                        new MockCollisionContext(true, true, true, true)
+                        new MockCollisionContext(true, true, true, true, true)
                 ).toAabbs().stream().map(box -> (1 - box.minY) * 16).distinct().toArray()
         ));
         traits.add(new BlockStateTrait<>(
@@ -500,14 +500,14 @@ public abstract class BlockStateTraits {
                 "Block Render Type",
                 "Which block render type the block uses.",
                 "net.minecraft.client.renderer.ItemBlockRenderTypes.getChunkRenderType",
-                (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString().split("\\[")[1].split(":")[0]
+                (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString()
         ));
         traits.add(new BlockStateTrait<>(
                 "fluid_render_type",
                 "Fluid Render Type",
                 "Which fluid render type the block uses.",
                 "",
-                (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString().split("\\[")[1].split(":")[0]
+                (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString()
         ));
         traits.add(new BlockStateTrait<>(
                 "blocks_skylight",
