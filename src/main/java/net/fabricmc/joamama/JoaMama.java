@@ -44,7 +44,7 @@ import java.util.function.Supplier;
 // TODO | Replace copied code segments with actual calls to the methods used. Use mixins/mock worlds?
 // TODO | 5/29/2024 | A lot of the basic parts of this project are in dire need of a rewrite. I was (compared to my other languages) inexperienced in Java when I started this project and there's a ton of messy, inconsistent, unnecessary, or just plain bad code here.
 
-public class JoaMama implements ModInitializer {
+public class  JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
 	private static final Path OUTPUT_PATH = FabricLoader.getInstance().getConfigDir().resolve("output").resolve("output.json");
@@ -111,7 +111,7 @@ public class JoaMama implements ModInitializer {
 		LEVEL = level;
 
 		if (!CALLED_ON_RELOAD_RESOURCES) {
-			BlockStateTraits.load(blockStateTraits);
+			BlockStateTraits.load(blockStateTraits, level);
 			BlockStateTraits.getTheWholeThing(blockStateTraits);
 			BlockStateTraits.addBlockTagProperties(blockStateTraits, BlockTags.class);
 
@@ -128,7 +128,7 @@ public class JoaMama implements ModInitializer {
 			LOGGER.info("Finished loading traits");
 		}
 
-		save("blockstate");
+		//save("blockstate");
 	}
 
 	private static int save(String type, String ... ids) {

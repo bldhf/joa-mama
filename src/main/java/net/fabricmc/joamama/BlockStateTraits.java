@@ -6,19 +6,30 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.fabricmc.joamama.mixin.*;
 import net.fabricmc.joamama.mock.*;
+import net.minecraft.advancements.criterion.EnchantmentPredicate;
+import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.component.predicates.DataComponentPredicate;
+import net.minecraft.core.component.predicates.DataComponentPredicates;
+import net.minecraft.core.component.predicates.EnchantmentsPredicate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
@@ -27,6 +38,11 @@ import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.material.*;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.predicates.CompositeLootItemCondition;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
+import net.minecraft.world.level.storage.loot.predicates.MatchTool;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -38,13 +54,15 @@ import java.util.stream.Stream;
 public abstract class BlockStateTraits {
     private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
+    private static ServerLevel level;
 
-    public static void load(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+    public static void load(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits, ServerLevel level) {
         SetMultimap<Block, BlockState> multimap = MultimapBuilder.hashKeys().hashSetValues().build();
         for (Block block : BuiltInRegistries.BLOCK) {
             multimap.putAll(block, block.getStateDefinition().getPossibleStates());
         }
         traits.load(multimap);
+        BlockStateTraits.level = level;
         setupClassNames(MapColor.class, mapColorMap);
         setupClassNames(BlockTags.class, blockTags, true);
     }
@@ -84,7 +102,7 @@ public abstract class BlockStateTraits {
                 "Block ID",
                 "",
                 "",
-                (state) -> state.toString().replaceAll("\\[.*\\]", "")
+                (state) -> state.toString().replaceAll("\\[.*", "")
         ));
         traits.add(new BlockStateTrait<>(
                 "blockstate",
@@ -598,6 +616,52 @@ public abstract class BlockStateTraits {
                 "",
                 (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
         ));
+        traits.add(new BlockStateTrait<>(
+                "requires_silk_touch",
+                "Requires Silk Touch",
+                "Whether this block requires a silk touch enchanted tool to drop as an item form.",
+                "",
+                // Making this foolproof is way, way more difficult than I thought it would be.
+                (state) -> {
+                    // of course the question here is how to get the loot tables;
+                    // LootManager doesn't seem to be a class anymore since 1.20.5
+                    Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
+                    if (tableKey.isPresent()) {
+                        LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
+                        List<LootPool> pools = ((LootTableAccessor) table).getPools();
+                        for (LootPool pool : pools) {
+                            Queue<LootItemCondition> conditions = new LinkedList<>(pool.conditions);
+                            while (!conditions.isEmpty()) {
+                                switch (conditions.remove()) {
+                                    case MatchTool matchTool:
+                                        Optional<ItemPredicate> predicate = matchTool.predicate();
+                                        if (predicate.isPresent()) {
+                                            Map<DataComponentPredicate.Type<?>, DataComponentPredicate> partial = predicate.get().components().partial();
+                                            if (partial.containsKey(DataComponentPredicates.ENCHANTMENTS)) {
+                                                if (partial.get(DataComponentPredicates.ENCHANTMENTS) instanceof EnchantmentsPredicate enchantmentsPredicate) {
+                                                    for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
+                                                        Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
+                                                        if (enchantments.isPresent()) {
+                                                            for (Holder<Enchantment> enchantment : enchantments.get())
+                                                                if (enchantment.is(Enchantments.SILK_TOUCH))
+                                                                    return true;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case CompositeLootItemCondition composite:
+                                        conditions.addAll(((CompositeLootItemConditionAccessor) composite).getTerms());
+                                        break;
+                                    default:
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+        ));
     }
 
     public static void getInstantUpdaterStuff(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
@@ -646,7 +710,7 @@ public abstract class BlockStateTraits {
                     traits.add(new BlockStateTrait<>(
                             "tag_" + staticField.getName().toLowerCase(),
                             "Tag: " + staticField.getName(),
-                            "" + staticField.getName(),
+                            staticField.getName(),
                             "",
                             (state) -> state.is(tag)
                     ));
