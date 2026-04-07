@@ -28,6 +28,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.*;
@@ -619,7 +621,7 @@ public abstract class BlockStateTraits {
         traits.add(new BlockStateTrait<>(
                 "requires_silk_touch",
                 "Requires Silk Touch",
-                "Whether this block requires a silk touch enchanted tool to drop as an item form.",
+                "Whether this block requires a silk touch enchanted tool to drop as an item form",
                 "",
                 // Making this foolproof is way, way more difficult than I thought it would be.
                 (state) -> {
@@ -660,6 +662,35 @@ public abstract class BlockStateTraits {
                         }
                     }
                     return false;
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "intended_tool",
+                "Intended Tool",
+                "The intended tool(s) used to destroy this block faster",
+                "",
+                (state) -> {
+                    ItemStack[] tools = {
+                            new ItemStack(Items.DIAMOND_SHOVEL),
+                            new ItemStack(Items.DIAMOND_PICKAXE),
+                            new ItemStack(Items.DIAMOND_AXE),
+                            new ItemStack(Items.DIAMOND_HOE),
+                            new ItemStack(Items.DIAMOND_SWORD),
+                            new ItemStack(Items.SHEARS)
+                    };
+                    String[] names = {
+                            "Shovel",
+                            "Pickaxe",
+                            "Axe",
+                            "Hoe",
+                            "Sword",
+                            "Shears"
+                    };
+                    List<String> rtrn = new ArrayList<>();
+                    for (int i = 0; i < tools.length; i++)
+                        if (tools[i].getDestroySpeed(state) > 1)
+                            rtrn.add(names[i]);
+                    return rtrn;
                 }
         ));
     }
