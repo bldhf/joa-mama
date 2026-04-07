@@ -43,7 +43,9 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.material.*;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
 import net.minecraft.world.level.storage.loot.predicates.CompositeLootItemCondition;
+import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.MatchTool;
 
@@ -745,6 +747,9 @@ public abstract class BlockStateTraits {
                         List<LootPool> pools = ((LootTableAccessor) table).getPools();
                         for (LootPool pool : pools) {
                             Queue<LootItemCondition> conditions = new LinkedList<>(pool.conditions);
+                            for (LootPoolEntryContainer entry : pool.entries) {
+                                conditions.addAll(((LootPoolEntryContainerAccessor) entry).getConditions());
+                            }
                             while (!conditions.isEmpty()) {
                                 switch (conditions.remove()) {
                                     case MatchTool matchTool:
@@ -757,11 +762,12 @@ public abstract class BlockStateTraits {
                                                         for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
                                                             Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
                                                             if (enchantments.isPresent()) {
-                                                                for (Holder<Enchantment> enchantment : enchantments.get())
+                                                                for (Holder<Enchantment> enchantment : enchantments.get()) {
                                                                     if (enchantment.is(Enchantments.SILK_TOUCH)) {
                                                                         silkTouch = true;
                                                                         break;
                                                                     }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -783,6 +789,8 @@ public abstract class BlockStateTraits {
                                     case CompositeLootItemCondition composite:
                                         conditions.addAll(((CompositeLootItemConditionAccessor) composite).getTerms());
                                         break;
+                                    case InvertedLootItemCondition inverted:
+                                        conditions.add(inverted.term());
                                     default:
                                 }
                             }
