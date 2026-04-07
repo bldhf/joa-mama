@@ -619,14 +619,123 @@ public abstract class BlockStateTraits {
                 (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
         ));
         traits.add(new BlockStateTrait<>(
+                "dragon_immune",
+                "Dragon Immune",
+                "Whether this block is immune to The Ender Dragon flying through it.",
+                "",
+                (state) -> state.is(BlockTags.DRAGON_IMMUNE) || state.is(BlockTags.DRAGON_TRANSPARENT)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "wither_block_break_immune",
+                "Wither Block Break Immune",
+                "Whether this block is immune to the wither's block breaking attack.",
+                "",
+                (state) -> state.is(BlockTags.WITHER_IMMUNE) || state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BUBBLE_COLUMN
+        ));
+        traits.add(new BlockStateTrait<>(
+                "wither_skull_immune",
+                "Wither Skull Immune",
+                "Whether this block is immune to the wither's skull attack.",
+                "",
+                (state) -> {
+                    float expRes = Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance());
+                    // net.minecraft.world.entity.projectile.WitherSkull.getBlockExplosionResistance
+                    if (1.3 < 0.3 * (0.3 + expRes)) {
+                        if (WitherBoss.canDestroy(state)) {
+                            return "Only to black skulls";
+                        }
+                        return "Yes";
+                    }
+                    return "No";
+                }
+        ));
+        StructureTemplateManager manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
+        Set<Block> blocksInStructures = manager.listTemplates()
+                .map(rl -> manager.get(rl).orElseThrow())
+                .flatMap(template -> {
+                    try {
+                        Field palettesField = template.getClass().getDeclaredField("palettes");
+                        palettesField.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        var palettes = (List<StructureTemplate.Palette>) palettesField.get(template);
+                        return palettes.stream()
+                                .map(StructureTemplate.Palette::blocks)
+                                .flatMap(blockInfos -> blockInfos
+                                        .stream()
+                                        .map(StructureTemplate.StructureBlockInfo::state)
+                                        .map(BlockState::getBlock)
+                                );
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        System.out.println("Generates in structures: " + e.getMessage());
+                        return Stream.of();
+                    }
+                })
+                .collect(Collectors.toUnmodifiableSet());
+        traits.add(new BlockStateTrait<>(
+                "generates_in_structures",
+                "Generates in Structures",
+                "Based off of what blocks show up in the standard structure palletes. Does not include all complex structures.",
+                "",
+                state -> blocksInStructures.contains(state.getBlock())
+        ));
+        traits.add(new BlockStateTrait<>(
+                "obstructs_cactus",
+                "Obstructs Cactus",
+                "Whether placing this block next to cactus destroys it.",
+                "",
+                state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "obstructs_tree_growth",
+                "Obstructs Tree Growth",
+                "",
+                "",
+                (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls",
+                "Connects To Walls (North)",
+                "Whether a wall block to the north will connect to this block.",
+                "",
+                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "raid_spawnable",
+                "Raid Spawnable",
+                "Whether raids can spawn on this block.",
+                "",
+                (state) ->
+                        SpawnPlacementTypes.ON_GROUND.isSpawnPositionOk(
+                                new MockMultiBlockLevelReader(Map.of(
+                                        BlockPos.ZERO.above(), Blocks.AIR.defaultBlockState(),
+                                        BlockPos.ZERO, Blocks.AIR.defaultBlockState(),
+                                        BlockPos.ZERO.below(), state
+                                )),
+                                BlockPos.ZERO,
+                                EntityType.RAVAGER
+                        ) || state.is(Blocks.SNOW)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_type",
+                "Pathfinding Type",
+                "",
+                "net.minecraft.world.level.pathfinder.WalkNodeEvaluator.getPathTypeFromState",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_penalty",
+                "Pathfinding Penalty",
+                "",
+                "net.minecraft.world.level.pathfinder.PathType.getMalus",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
+        ));
+        traits.add(new BlockStateTrait<>(
                 "requires_silk_touch",
                 "Requires Silk Touch",
                 "Whether this block requires a silk touch enchanted tool to drop as an item form",
                 "",
                 // Making this foolproof is way, way more difficult than I thought it would be.
                 (state) -> {
-                    // of course the question here is how to get the loot tables;
-                    // LootManager doesn't seem to be a class anymore since 1.20.5
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
                     if (tableKey.isPresent()) {
                         LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
@@ -750,117 +859,6 @@ public abstract class BlockStateTraits {
                 }
             }
         }
-        traits.add(new BlockStateTrait<>(
-                "dragon_immune",
-                "Dragon Immune",
-                "Whether this block is immune to The Ender Dragon flying through it.",
-                "",
-                (state) -> state.is(BlockTags.DRAGON_IMMUNE) || state.is(BlockTags.DRAGON_TRANSPARENT)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "wither_block_break_immune",
-                "Wither Block Break Immune",
-                "Whether this block is immune to the wither's block breaking attack.",
-                "",
-                (state) -> state.is(BlockTags.WITHER_IMMUNE) || state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BUBBLE_COLUMN
-        ));
-        traits.add(new BlockStateTrait<>(
-                "wither_skull_immune",
-                "Wither Skull Immune",
-                "Whether this block is immune to the wither's skull attack.",
-                "",
-                (state) -> {
-                    float expRes = Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance());
-                    // net.minecraft.world.entity.projectile.WitherSkull.getBlockExplosionResistance
-                    if (1.3 < 0.3 * (0.3 + expRes)) {
-                        if (WitherBoss.canDestroy(state)) {
-                            return "Only to black skulls";
-                        }
-                        return "Yes";
-                    }
-                    return "No";
-                }
-        ));
-        StructureTemplateManager manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
-        Set<Block> blocksInStructures = manager.listTemplates()
-                .map(rl -> manager.get(rl).orElseThrow())
-                .flatMap(template -> {
-                    try {
-                        Field palettesField = template.getClass().getDeclaredField("palettes");
-                        palettesField.setAccessible(true);
-                        @SuppressWarnings("unchecked")
-                        var palettes = (List<StructureTemplate.Palette>) palettesField.get(template);
-                        return palettes.stream()
-                                .map(StructureTemplate.Palette::blocks)
-                                .flatMap(blockInfos -> blockInfos
-                                        .stream()
-                                        .map(StructureTemplate.StructureBlockInfo::state)
-                                        .map(BlockState::getBlock)
-                                );
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        System.out.println("Generates in structures: " + e.getMessage());
-                        return Stream.of();
-                    }
-                })
-                .collect(Collectors.toUnmodifiableSet());
-        traits.add(new BlockStateTrait<>(
-                "generates_in_structures",
-                "Generates in Structures",
-                "Based off of what blocks show up in the standard structure palletes. Does not include all complex structures.",
-                "",
-                state -> blocksInStructures.contains(state.getBlock())
-        ));
-        traits.add(new BlockStateTrait<>(
-                "obstructs_cactus",
-                "Obstructs Cactus",
-                "Whether placing this block next to cactus destroys it.",
-                "",
-                state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "obstructs_tree_growth",
-                "Obstructs Tree Growth",
-                "",
-                "",
-                (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "connects_to_walls",
-                "Connects To Walls (North)",
-                "Whether a wall block to the north will connect to this block.",
-                "",
-                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "raid_spawnable",
-                "Raid Spawnable",
-                "Whether raids can spawn on this block.",
-                "",
-                (state) ->
-                        SpawnPlacementTypes.ON_GROUND.isSpawnPositionOk(
-                                new MockMultiBlockLevelReader(Map.of(
-                                        BlockPos.ZERO.above(), Blocks.AIR.defaultBlockState(),
-                                        BlockPos.ZERO, Blocks.AIR.defaultBlockState(),
-                                        BlockPos.ZERO.below(), state
-                                )),
-                                BlockPos.ZERO,
-                                EntityType.RAVAGER
-                        ) || state.is(Blocks.SNOW)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "pathfinding_type",
-                "Pathfinding Type",
-                "",
-                "net.minecraft.world.level.pathfinder.WalkNodeEvaluator.getPathTypeFromState",
-                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "pathfinding_penalty",
-                "Pathfinding Penalty",
-                "",
-                "net.minecraft.world.level.pathfinder.PathType.getMalus",
-                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
-        ));
     }
 
     public static JsonArray jsonArrayFromStream(Stream<Double> arr) {
