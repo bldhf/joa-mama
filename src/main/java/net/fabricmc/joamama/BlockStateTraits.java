@@ -28,6 +28,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -730,14 +731,16 @@ public abstract class BlockStateTraits {
                 (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
         ));
         traits.add(new BlockStateTrait<>(
-                "requires_silk_touch",
-                "Requires Silk Touch",
-                "Whether this block requires a silk touch enchanted tool to drop as an item form",
+                "requires_silk_touch_or_shears",
+                "Requires Silk Touch or Shears",
+                "Whether this block requires a silk touch enchanted tool or shears to drop as an item form",
                 "",
                 // Making this foolproof is way, way more difficult than I thought it would be.
                 (state) -> {
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
                     if (tableKey.isPresent()) {
+                        boolean silkTouch = false;
+                        boolean shears = false;
                         LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
                         List<LootPool> pools = ((LootTableAccessor) table).getPools();
                         for (LootPool pool : pools) {
@@ -748,18 +751,33 @@ public abstract class BlockStateTraits {
                                         Optional<ItemPredicate> predicate = matchTool.predicate();
                                         if (predicate.isPresent()) {
                                             Map<DataComponentPredicate.Type<?>, DataComponentPredicate> partial = predicate.get().components().partial();
-                                            if (partial.containsKey(DataComponentPredicates.ENCHANTMENTS)) {
-                                                if (partial.get(DataComponentPredicates.ENCHANTMENTS) instanceof EnchantmentsPredicate enchantmentsPredicate) {
-                                                    for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
-                                                        Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
-                                                        if (enchantments.isPresent()) {
-                                                            for (Holder<Enchantment> enchantment : enchantments.get())
-                                                                if (enchantment.is(Enchantments.SILK_TOUCH))
-                                                                    return true;
+                                            if (!silkTouch) {
+                                                if (partial.containsKey(DataComponentPredicates.ENCHANTMENTS)) {
+                                                    if (partial.get(DataComponentPredicates.ENCHANTMENTS) instanceof EnchantmentsPredicate enchantmentsPredicate) {
+                                                        for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
+                                                            Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
+                                                            if (enchantments.isPresent()) {
+                                                                for (Holder<Enchantment> enchantment : enchantments.get())
+                                                                    if (enchantment.is(Enchantments.SILK_TOUCH)) {
+                                                                        silkTouch = true;
+                                                                        break;
+                                                                    }
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
+                                            Optional<HolderSet<Item>> items = predicate.get().items();
+                                            if (!shears) {
+                                                if (items.isPresent()) {
+                                                    for (Holder<Item> item : items.get())
+                                                        if (item.value().equals(Items.SHEARS)) {
+                                                            shears = true;
+                                                            break;
+                                                        }
+                                                }
+                                            }
+
                                         }
                                         break;
                                     case CompositeLootItemCondition composite:
@@ -769,8 +787,14 @@ public abstract class BlockStateTraits {
                                 }
                             }
                         }
+                        if (silkTouch) {
+                            if (shears) return "Silk Touch or Shears";
+                            return "Silk Touch";
+                        }
+                        if (shears) return "Shears";
+                        return "No";
                     }
-                    return false;
+                    return "Not Applicable";
                 }
         ));
         traits.add(new BlockStateTrait<>(
