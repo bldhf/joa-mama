@@ -43,6 +43,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.level.material.*;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.entries.CompositeEntryBase;
 import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
 import net.minecraft.world.level.storage.loot.predicates.CompositeLootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.InvertedLootItemCondition;
@@ -733,22 +734,25 @@ public abstract class BlockStateTraits {
                 (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
         ));
         traits.add(new BlockStateTrait<>(
-                "requires_silk_touch_or_shears",
-                "Requires Silk Touch or Shears",
-                "Whether this block requires a silk touch enchanted tool or shears to drop as an item form",
+                "requires_silk_touch",
+                "Different Drop When Using Silk Touch",
+                "Whether this block has a different drop when using a silk touch enchanted tool",
                 "",
                 // Making this foolproof is way, way more difficult than I thought it would be.
                 (state) -> {
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
                     if (tableKey.isPresent()) {
-                        boolean silkTouch = false;
-                        boolean shears = false;
                         LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
                         List<LootPool> pools = ((LootTableAccessor) table).getPools();
                         for (LootPool pool : pools) {
                             Queue<LootItemCondition> conditions = new LinkedList<>(pool.conditions);
-                            for (LootPoolEntryContainer entry : pool.entries) {
+                            Queue<LootPoolEntryContainer> entries = new LinkedList<>(pool.entries);
+                            while (!entries.isEmpty()) {
+                                LootPoolEntryContainer entry = entries.remove();
                                 conditions.addAll(((LootPoolEntryContainerAccessor) entry).getConditions());
+                                if (entry instanceof CompositeEntryBase composite) {
+                                    entries.addAll(((CompositeEntryBaseAccessor) composite).getChildren());
+                                }
                             }
                             while (!conditions.isEmpty()) {
                                 switch (conditions.remove()) {
@@ -756,34 +760,20 @@ public abstract class BlockStateTraits {
                                         Optional<ItemPredicate> predicate = matchTool.predicate();
                                         if (predicate.isPresent()) {
                                             Map<DataComponentPredicate.Type<?>, DataComponentPredicate> partial = predicate.get().components().partial();
-                                            if (!silkTouch) {
-                                                if (partial.containsKey(DataComponentPredicates.ENCHANTMENTS)) {
-                                                    if (partial.get(DataComponentPredicates.ENCHANTMENTS) instanceof EnchantmentsPredicate enchantmentsPredicate) {
-                                                        for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
-                                                            Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
-                                                            if (enchantments.isPresent()) {
-                                                                for (Holder<Enchantment> enchantment : enchantments.get()) {
-                                                                    if (enchantment.is(Enchantments.SILK_TOUCH)) {
-                                                                        silkTouch = true;
-                                                                        break;
-                                                                    }
+                                            if (partial.containsKey(DataComponentPredicates.ENCHANTMENTS)) {
+                                                if (partial.get(DataComponentPredicates.ENCHANTMENTS) instanceof EnchantmentsPredicate enchantmentsPredicate) {
+                                                    for (EnchantmentPredicate enchantmentPredicate : ((EnchantmentsPredicateAccessor) enchantmentsPredicate).getEnchantments()) {
+                                                        Optional<HolderSet<Enchantment>> enchantments = enchantmentPredicate.enchantments();
+                                                        if (enchantments.isPresent()) {
+                                                            for (Holder<Enchantment> enchantment : enchantments.get()) {
+                                                                if (enchantment.is(Enchantments.SILK_TOUCH)) {
+                                                                    return "Yes";
                                                                 }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-                                            Optional<HolderSet<Item>> items = predicate.get().items();
-                                            if (!shears) {
-                                                if (items.isPresent()) {
-                                                    for (Holder<Item> item : items.get())
-                                                        if (item.value().equals(Items.SHEARS)) {
-                                                            shears = true;
-                                                            break;
-                                                        }
-                                                }
-                                            }
-
                                         }
                                         break;
                                     case CompositeLootItemCondition composite:
@@ -795,11 +785,55 @@ public abstract class BlockStateTraits {
                                 }
                             }
                         }
-                        if (silkTouch) {
-                            if (shears) return "Silk Touch or Shears";
-                            return "Silk Touch";
+                        return "No";
+                    }
+                    return "Not Applicable";
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "requires_shears",
+                "Different Drop When Using Shears",
+                "Whether this block has a different drop when using a silk touch enchanted tool",
+                "",
+                (state) -> {
+                    Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
+                    if (tableKey.isPresent()) {
+                        LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
+                        List<LootPool> pools = ((LootTableAccessor) table).getPools();
+                        for (LootPool pool : pools) {
+                            Queue<LootItemCondition> conditions = new LinkedList<>(pool.conditions);
+                            Queue<LootPoolEntryContainer> entries = new LinkedList<>(pool.entries);
+                            while (!entries.isEmpty()) {
+                                LootPoolEntryContainer entry = entries.remove();
+                                conditions.addAll(((LootPoolEntryContainerAccessor) entry).getConditions());
+                                if (entry instanceof CompositeEntryBase composite) {
+                                    entries.addAll(((CompositeEntryBaseAccessor) composite).getChildren());
+                                }
+                            }
+                            while (!conditions.isEmpty()) {
+                                switch (conditions.remove()) {
+                                    case MatchTool matchTool:
+                                        Optional<ItemPredicate> predicate = matchTool.predicate();
+                                        if (predicate.isPresent()) {
+                                            Optional<HolderSet<Item>> items = predicate.get().items();
+                                            if (items.isPresent()) {
+                                                for (Holder<Item> item : items.get()) {
+                                                    if (item.value().equals(Items.SHEARS)) {
+                                                        return "Yes";
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case CompositeLootItemCondition composite:
+                                        conditions.addAll(((CompositeLootItemConditionAccessor) composite).getTerms());
+                                        break;
+                                    case InvertedLootItemCondition inverted:
+                                        conditions.add(inverted.term());
+                                    default:
+                                }
+                            }
                         }
-                        if (shears) return "Shears";
                         return "No";
                     }
                     return "Not Applicable";

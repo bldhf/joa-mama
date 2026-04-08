@@ -6,6 +6,7 @@
   "mixins": [
     "ArmorStandInvoker",
     "BlockMixin",
+    "CompositeEntryBaseAccessor",
     "CompositeLootItemConditionAccessor",
     "EnchantmentsPredicateAccessor",
     "EntityAccessor",
