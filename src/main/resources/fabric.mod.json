@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "joamama",
-  "version": "5.2.0",
+  "version": "5.3.0",
 
   "name": "JOA MAMA!",
   "description": "JOA MAMA!",
@@ -27,9 +27,9 @@
 
   "depends": {
     "fabricloader": ">=0.14.21",
-    "fabric": "*",
-    "minecraft": "1.21.11",
-    "java": "21"
+    "fabric-api": "*",
+    "minecraft": "26.1",
+    "java": "25"
   },
   "suggests": {
     "another-mod": "*"

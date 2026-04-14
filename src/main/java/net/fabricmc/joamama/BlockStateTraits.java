@@ -9,7 +9,9 @@ import net.fabricmc.joamama.mock.*;
 import net.minecraft.advancements.criterion.EnchantmentPredicate;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.block.BlockStateModelSet;
+import net.minecraft.client.renderer.block.FluidStateModelSet;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -25,6 +27,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -61,8 +64,10 @@ public abstract class BlockStateTraits {
     private static final Map<MapColor, String> mapColorMap = new HashMap<>();
     private static final Map<BlockTags, String> blockTags = new HashMap<>();
     private static ServerLevel level;
+    private static BlockStateModelSet blockStateModelSet;
+    private static FluidStateModelSet fluidStateModelSet;
 
-    public static void load(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits, ServerLevel level) {
+    public static void load(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits, ServerLevel level, Minecraft client) {
         SetMultimap<Block, BlockState> multimap = MultimapBuilder.hashKeys().hashSetValues().build();
         for (Block block : BuiltInRegistries.BLOCK) {
             multimap.putAll(block, block.getStateDefinition().getPossibleStates());
@@ -71,6 +76,9 @@ public abstract class BlockStateTraits {
         BlockStateTraits.level = level;
         setupClassNames(MapColor.class, mapColorMap);
         setupClassNames(BlockTags.class, blockTags, true);
+
+        blockStateModelSet = client.getModelManager().getBlockStateModelSet();
+        fluidStateModelSet = client.getModelManager().getFluidStateModelSet();
     }
 
     public static <T> void setupClassNames(Class<T> clazz, Map<T, String> map) {
@@ -118,8 +126,8 @@ public abstract class BlockStateTraits {
                 BlockState::toString
         ));
         traits.add(new BlockStateTrait<>(
-                "translation_name",
-                "Translation Name",
+                "translated_name",
+                "Translated Name",
                 "The translated name of the block, if it exists, i think.",
                 "",
                 (state) -> {
@@ -155,6 +163,13 @@ public abstract class BlockStateTraits {
                 (state) -> Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance())
         ));
         traits.add(new BlockStateTrait<>(
+                "requires_correct_tool",
+                "Requires Correct Tool For Drops",
+                "Whether using the required tool is needed for this block to drop as an item.",
+                "",
+                (state) -> state.requiresCorrectToolForDrops()
+        ));
+        traits.add(new BlockStateTrait<>(
                 "luminance",
                 "Luminance",
                 "How much light the block emits.",
@@ -173,11 +188,14 @@ public abstract class BlockStateTraits {
                 "Movable",
                 "Whether the block can be pushed by a piston, stops the piston from extending, or whether attempting to push it destroys the block.",
                 "",
-                // TODO: this does not properly account for block entities (e.g. beds and bells break).
-                // TODO: Also, bedrock, crying obsidian, end portal frame, light block, ++ are wrong
+                // TODO: bedrock, crying obsidian, end portal frame, light block, ++ are wrong
                 state -> {
                     if (state.getBlock() instanceof EntityBlock) {
-                        return "No";
+                        return switch (state.getPistonPushReaction()) {
+                            case NORMAL, PUSH_ONLY, BLOCK -> "No";
+                            case DESTROY -> "Breaks";
+                            case IGNORE -> null;
+                        };
                     } else {
                         return switch (state.getPistonPushReaction()) {
                             case NORMAL, PUSH_ONLY -> "Yes";
@@ -245,9 +263,9 @@ public abstract class BlockStateTraits {
         traits.add(new BlockStateTrait<>(
                 "opacity",
                 "Opacity",
-                "How much light the block... blocks.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getLightBlock",
-                BlockBehaviour.BlockStateBase::getLightBlock
+                "How much light the block dampens",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getLightDampening",
+                BlockBehaviour.BlockStateBase::getLightDampening
         ));
         traits.add(new BlockStateTrait<>(
                 "is_opaque_full_cube",
@@ -346,7 +364,7 @@ public abstract class BlockStateTraits {
                 "Whether placing this block above a beacon will prevent its beam from forming, or stop its current one.",
                 "",
                 // net/minecraft/block/entity/BeaconBlockEntity.java:150
-                (state) -> !(state.getLightBlock() < 15 || state.is(Blocks.BEDROCK))
+                (state) -> !(state.getLightDampening() < 15 || state.is(Blocks.BEDROCK))
         ));
         traits.add(new BlockStateTrait<>(
                 "full_cube",
@@ -420,7 +438,7 @@ public abstract class BlockStateTraits {
                 "Kills Grass",
                 "Whether grass will die when placed underneath this block.",
                 "net.minecraft.world.level.block.SpreadingSnowyDirtBlock#canBeGrass",
-                (state) -> !SpreadableBlockAccessor.invokeCanBeGrass(state, new MockLevelReader(state), BlockPos.ZERO)
+                (state) -> !SpreadableBlockAccessor.invokeCanStayAlive(state, new MockLevelReader(state), BlockPos.ZERO)
         ));
         traits.add(new BlockStateTrait<>(
                 "exists_as_item",
@@ -523,15 +541,38 @@ public abstract class BlockStateTraits {
                 "block_render_type",
                 "Block Render Type",
                 "Which block render type the block uses.",
-                "net.minecraft.client.renderer.ItemBlockRenderTypes.getChunkRenderType",
-                (state) -> ItemBlockRenderTypes.getChunkRenderType(state).toString()
+                "net.minecraft.client.resources.model.geometry.BakedQuad.MaterialInfo.layer",
+                (state) -> {
+                    final List<BlockStateModelPart> parts = new ArrayList<>();
+                    blockStateModelSet.get(state).collectParts(RandomSource.create(), parts);
+                    var types = parts.stream().flatMap(
+                            part -> Stream.of(
+                                    // `null` represents unculled textures. but for some reason, not every block has
+                                    // textures when using unculled textures, so we also fetch all the other directions,
+                                    // just to be safe.
+                                    part.getQuads(null),
+                                    part.getQuads(Direction.UP),
+                                    part.getQuads(Direction.DOWN),
+                                    part.getQuads(Direction.NORTH),
+                                    part.getQuads(Direction.SOUTH),
+                                    part.getQuads(Direction.EAST),
+                                    part.getQuads(Direction.WEST)
+                            ).flatMap(list -> list.stream())
+                            .map(
+                                quad -> quad.materialInfo().layer().toString()
+                            )
+                    ).collect(Collectors.toSet());
+                    if (types.size() == 1) return types.iterator().next();
+                    if (types.isEmpty()) return "Not Applicable";
+                    return types;
+                }
         ));
         traits.add(new BlockStateTrait<>(
                 "fluid_render_type",
                 "Fluid Render Type",
                 "Which fluid render type the block uses.",
                 "",
-                (state) -> ItemBlockRenderTypes.getRenderLayer(state.getFluidState()).toString()
+                (state) -> fluidStateModelSet.get(state.getFluidState()).layer().toString()
         ));
         traits.add(new BlockStateTrait<>(
                 "blocks_skylight",
@@ -793,7 +834,7 @@ public abstract class BlockStateTraits {
         traits.add(new BlockStateTrait<>(
                 "requires_shears",
                 "Different Drop When Using Shears",
-                "Whether this block has a different drop when using a silk touch enchanted tool",
+                "Whether this block has a different drop when using shears",
                 "",
                 (state) -> {
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
@@ -880,7 +921,7 @@ public abstract class BlockStateTraits {
                     try {
                         Class<?> declaringClass = state.getBlock().getClass().getMethod("getStateForNeighborUpdate", BlockState.class, Direction.class, BlockState.class, LevelAccessor.class, BlockPos.class, BlockPos.class).getDeclaringClass();
                         if (declaringClass == BlockBehaviour.class) return false;
-                        List<Class<?>> instantDeclaringClasses = List.of(BlockBehaviour.class, BasePressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralPlantBlock.class, CoralFanBlock.class, BaseCoralPlantTypeBlock.class, CoralWallFanBlock.class, BaseCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, LiquidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, CeilingHangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceBlock.class, HugeMushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, IronBarsBlock.class, PistonHeadBlock.class, BushBlock.class, MangrovePropaguleBlock.class, RedStoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, StandingSignBlock.class, SnowLayerBlock.class, SnowyDirtBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairBlock.class, DoublePlantBlock.class, TorchBlock.class, TripWireBlock.class, TripWireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, FaceAttachedHorizontalDirectionalBlock.class, RedstoneWallTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
+                        List<Class<?>> instantDeclaringClasses = List.of(BlockBehaviour.class, BasePressurePlateBlock.class, AmethystClusterBlock.class, AttachedStemBlock.class, BambooSaplingBlock.class, BannerBlock.class, BedBlock.class, BeehiveBlock.class, BellBlock.class, BigDripleafBlock.class, CakeBlock.class, CampfireBlock.class, CandleCakeBlock.class, CarpetBlock.class, ChestBlock.class, CocoaBlock.class, ConcretePowderBlock.class, CoralPlantBlock.class, CoralFanBlock.class, BaseCoralPlantTypeBlock.class, CoralWallFanBlock.class, BaseCoralWallFanBlock.class, DoorBlock.class, FenceBlock.class, FenceGateBlock.class, FireBlock.class, FlowerPotBlock.class, LiquidBlock.class, FrogspawnBlock.class, HangingRootsBlock.class, CeilingHangingSignBlock.class, LadderBlock.class, LanternBlock.class, MultifaceBlock.class, HugeMushroomBlock.class, NetherPortalBlock.class, NoteBlock.class, IronBarsBlock.class, PistonHeadBlock.class, BushBlock.class, MangrovePropaguleBlock.class, RedStoneWireBlock.class, RepeaterBlock.class, SeagrassBlock.class, SeaPickleBlock.class, StandingSignBlock.class, SnowLayerBlock.class, SoulFireBlock.class, SporeBlossomBlock.class, StairBlock.class, DoublePlantBlock.class, TorchBlock.class, TripWireBlock.class, TripWireHookBlock.class, VineBlock.class, WallBannerBlock.class, WallBlock.class, WallHangingSignBlock.class, FaceAttachedHorizontalDirectionalBlock.class, RedstoneWallTorchBlock.class, WallSignBlock.class, WallTorchBlock.class);
                         return instantDeclaringClasses.contains(declaringClass);
                     } catch (NoSuchMethodException e) {
                         e.printStackTrace();

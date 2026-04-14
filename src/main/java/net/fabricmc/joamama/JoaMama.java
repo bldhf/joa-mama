@@ -44,10 +44,10 @@ import java.util.function.Supplier;
 // TODO | Replace copied code segments with actual calls to the methods used. Use mixins/mock worlds?
 // TODO | 5/29/2024 | A lot of the basic parts of this project are in dire need of a rewrite. I was (compared to my other languages) inexperienced in Java when I started this project and there's a ton of messy, inconsistent, unnecessary, or just plain bad code here.
 
-public class  JoaMama implements ModInitializer {
+public class JoaMama implements ModInitializer {
 	// haha, get it? it's like joe mama except with joa! XD
 	public static final Logger LOGGER = LoggerFactory.getLogger("JOA MAMA");
-	private static final Path OUTPUT_PATH = FabricLoader.getInstance().getConfigDir().resolve("output").resolve("output.json");
+	private static final Path OUTPUT_DIR = FabricLoader.getInstance().getConfigDir().resolve("output");
 	private static boolean CALLED_ON_RELOAD_RESOURCES = false;
 	private static final TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> blockStateTraits = new TraitCollection<>(BlockStateTrait::load);
 	private static final TraitCollection<EntityStateTrait<?>, SetMultimap<EntityType<?>, EntityState>> entityTraits = new TraitCollection<>(EntityStateTrait::load);
@@ -111,7 +111,7 @@ public class  JoaMama implements ModInitializer {
 		LEVEL = level;
 
 		if (!CALLED_ON_RELOAD_RESOURCES) {
-			BlockStateTraits.load(blockStateTraits, level);
+			BlockStateTraits.load(blockStateTraits, level, client);
 			BlockStateTraits.getTheWholeThing(blockStateTraits);
 			BlockStateTraits.addBlockTagProperties(blockStateTraits, BlockTags.class);
 
@@ -128,7 +128,7 @@ public class  JoaMama implements ModInitializer {
 			LOGGER.info("Finished loading traits");
 		}
 
-		//save("blockstate");
+		// save("blockstate");
 	}
 
 	private static int save(String type, String ... ids) {
@@ -154,7 +154,7 @@ public class  JoaMama implements ModInitializer {
 		for (String id : idSet) {
 			idSetTraits.put(id, traitCollection.loadTrait(id));
 		}
-		try (Writer writer = Files.newBufferedWriter(OUTPUT_PATH)) {
+		try (Writer writer = Files.newBufferedWriter(OUTPUT_DIR.resolve("output_"+type+".json"))) {
 			writer.write(TraitsGson.gson().toJson(idSetTraits));
 			writer.flush();
 			LOGGER.info("Output written to file");

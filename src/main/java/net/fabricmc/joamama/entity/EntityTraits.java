@@ -172,11 +172,10 @@ public abstract class EntityTraits {
             "",
             entity -> {
                 if (entity instanceof LivingEntity) {
-                    EntityType<?> mobType = entity.getType();
-                    if (mobType.is(EntityTypeTags.UNDEAD)) return "UNDEAD";
-                    else if (mobType.is(EntityTypeTags.ARTHROPOD)) return "ARTHROPOD";
-                    else if (mobType.is(EntityTypeTags.ILLAGER)) return "ILLAGER";
-                    else if (mobType.is(EntityTypeTags.AQUATIC)) return "AQUATIC";
+                    if (entity.is(EntityTypeTags.UNDEAD)) return "UNDEAD";
+                    else if (entity.is(EntityTypeTags.ARTHROPOD)) return "ARTHROPOD";
+                    else if (entity.is(EntityTypeTags.ILLAGER)) return "ILLAGER";
+                    else if (entity.is(EntityTypeTags.AQUATIC)) return "AQUATIC";
                 }
                 return "NONE";
             }

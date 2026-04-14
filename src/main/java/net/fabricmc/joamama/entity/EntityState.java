@@ -7,6 +7,7 @@ import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.chat.ChatAbilities;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -73,7 +74,7 @@ public class EntityState {
         entityRules = MultimapBuilder.hashKeys().hashSetValues().build();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             if (type == EntityType.PLAYER) {
-                registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, new Input(false, false, false, false, false, false, false), false));
+                registerType(EntityType.PLAYER, () -> new LocalPlayer(client, clientLevel, connection, stats, recipeBook, new Input(false, false, false, false, false, false, false), false, new ChatAbilities.Builder().build()));
             } else {
                 registerType(type, () -> type.create(level, EntitySpawnReason.COMMAND)); // TODO | 12/1/2024 | 1.21.3 port: does this have side effects? iirc command spawning affects endermite despawn, possibly other things
                 Entity entity = type.create(level, EntitySpawnReason.COMMAND);           // ^
