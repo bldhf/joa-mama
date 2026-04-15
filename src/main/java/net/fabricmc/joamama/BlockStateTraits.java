@@ -28,6 +28,8 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -785,6 +787,7 @@ public abstract class BlockStateTraits {
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
                     if (tableKey.isEmpty())
                         return "Not Applicable";
+                    assert level.getServer() != null;
                     List<LootPool> pools = ((LootTableAccessor) (level.getServer().reloadableRegistries().getLootTable(tableKey.get()))).getPools();
                     for (LootPool pool : pools) {
                         Queue<LootItemCondition> conditions = new LinkedList<>(pool.conditions);
@@ -837,6 +840,7 @@ public abstract class BlockStateTraits {
                     Optional<ResourceKey<LootTable>> tableKey = state.getBlock().getLootTable();
                     if (tableKey.isEmpty())
                         return "Not Applicable";
+                    assert level.getServer() != null;
                     LootTable table = level.getServer().reloadableRegistries().getLootTable(tableKey.get());
                     List<LootPool> pools = ((LootTableAccessor) table).getPools();
                     for (LootPool pool : pools) {
@@ -894,6 +898,22 @@ public abstract class BlockStateTraits {
                         if (tool.item().getDestroySpeed(state) > 1)
                             names.add(tool.name());
                     return names;
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "xp_dropped_when_mined",
+                "XP Dropped When Mined",
+                "The amount of experience points this block drops upon mining.",
+                "",
+                (state) -> switch (state.getBlock()) {
+                    case DropExperienceBlock dropExperienceBlock ->
+                            switch (((DropExperienceBlockAccessor) dropExperienceBlock).getXpRange()) {
+                                case ConstantInt constant -> constant.value();
+                                case UniformInt uniform -> uniform.minInclusive() + "-" + uniform.maxInclusive();
+                                default -> "ERROR: Unexpected IntProvider subclass!";
+                            };
+                    case BaseEntityBlock ignored -> "MANUAL DATA PLACEHOLDER";
+                    default -> "No";
                 }
         ));
     }

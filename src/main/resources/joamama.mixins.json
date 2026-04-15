@@ -8,6 +8,7 @@
     "BlockMixin",
     "CompositeEntryBaseAccessor",
     "CompositeLootItemConditionAccessor",
+    "DropExperienceBlockAccessor",
     "EnchantmentsPredicateAccessor",
     "EntityAccessor",
     "EntityTypeAccessor",
