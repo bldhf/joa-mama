@@ -916,6 +916,13 @@ public abstract class BlockStateTraits {
                     default -> "No";
                 }
         ));
+        traits.add(new BlockStateTrait<>(
+                "sends_comparator_updates",
+                "Sends Comparator Updates",
+                "Whether interactions with this block sends updates to comparators up to 2 blocks away (manhattan distance).",
+                "",
+                BlockState::hasAnalogOutputSignal
+        ));
     }
 
     public static void getInstantUpdaterStuff(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
