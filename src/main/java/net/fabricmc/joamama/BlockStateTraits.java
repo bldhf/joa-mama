@@ -167,7 +167,7 @@ public abstract class BlockStateTraits {
                 "Requires Correct Tool For Drops",
                 "Whether using the required tool is needed for this block to drop as an item.",
                 "",
-                (state) -> state.requiresCorrectToolForDrops()
+                BlockBehaviour.BlockStateBase::requiresCorrectToolForDrops
         ));
         traits.add(new BlockStateTrait<>(
                 "luminance",
@@ -557,7 +557,7 @@ public abstract class BlockStateTraits {
                                     part.getQuads(Direction.SOUTH),
                                     part.getQuads(Direction.EAST),
                                     part.getQuads(Direction.WEST)
-                            ).flatMap(list -> list.stream())
+                            ).flatMap(Collection::stream)
                             .map(
                                 quad -> quad.materialInfo().layer().toString()
                             )
@@ -694,6 +694,7 @@ public abstract class BlockStateTraits {
                     return "No";
                 }
         ));
+        assert Minecraft.getInstance().getSingleplayerServer() != null;
         StructureTemplateManager manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
         Set<Block> blocksInStructures = manager.listTemplates()
                 .map(rl -> manager.get(rl).orElseThrow())
@@ -879,7 +880,7 @@ public abstract class BlockStateTraits {
                 "The intended tool(s) used to destroy this block faster",
                 "",
                 (state) -> {
-                    record Tool (String name, ItemStack item) {};
+                    record Tool (String name, ItemStack item) {}
                     Tool[] tools = {
                             new Tool("Shovel", new ItemStack(Items.DIAMOND_SHOVEL)),
                             new Tool("Pickaxe", new ItemStack(Items.DIAMOND_PICKAXE)),
