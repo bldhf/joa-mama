@@ -879,27 +879,20 @@ public abstract class BlockStateTraits {
                 "The intended tool(s) used to destroy this block faster",
                 "",
                 (state) -> {
-                    ItemStack[] tools = {
-                            new ItemStack(Items.DIAMOND_SHOVEL),
-                            new ItemStack(Items.DIAMOND_PICKAXE),
-                            new ItemStack(Items.DIAMOND_AXE),
-                            new ItemStack(Items.DIAMOND_HOE),
-                            new ItemStack(Items.DIAMOND_SWORD),
-                            new ItemStack(Items.SHEARS)
+                    record Tool (String name, ItemStack item) {};
+                    Tool[] tools = {
+                            new Tool("Shovel", new ItemStack(Items.DIAMOND_SHOVEL)),
+                            new Tool("Pickaxe", new ItemStack(Items.DIAMOND_PICKAXE)),
+                            new Tool("Axe", new ItemStack(Items.DIAMOND_AXE)),
+                            new Tool("Hoe", new ItemStack(Items.DIAMOND_HOE)),
+                            new Tool("Sword", new ItemStack(Items.DIAMOND_SWORD)),
+                            new Tool("Shears", new ItemStack(Items.SHEARS))
                     };
-                    String[] names = {
-                            "Shovel",
-                            "Pickaxe",
-                            "Axe",
-                            "Hoe",
-                            "Sword",
-                            "Shears"
-                    };
-                    List<String> rtrn = new ArrayList<>();
-                    for (int i = 0; i < tools.length; i++)
-                        if (tools[i].getDestroySpeed(state) > 1)
-                            rtrn.add(names[i]);
-                    return rtrn;
+                    List<String> names = new ArrayList<>();
+                    for (Tool tool : tools)
+                        if (tool.item().getDestroySpeed(state) > 1)
+                            names.add(tool.name());
+                    return names;
                 }
         ));
     }
