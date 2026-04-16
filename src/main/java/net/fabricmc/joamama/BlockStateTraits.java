@@ -921,10 +921,17 @@ public abstract class BlockStateTraits {
                 "Sends Comparator Updates",
                 "Whether interactions with this block sends updates to comparators up to 2 blocks away (manhattan distance).",
                 "",
-                (_) -> "PLACEHOLDER"
+                (_) -> "MANUAL DATA PLACEHOLDER"
                 // The only way I see this one being possible is by checking if the classes of the block or block
                 // entity, or their superclasses, excluding the base BlockEntity class, are capable of calling
                 // setChanged or updateNeighbourForOutputSignal. I have no idea how that could be done, though. - bldhf
+        ));
+        traits.add(new BlockStateTrait<>(
+                "comparator_output",
+                "Comparator Output",
+                "Whether interactions with this block sends updates to comparators up to 2 blocks away (manhattan distance).",
+                "What value a comparator will read from this block.",
+                (state) -> state.hasAnalogOutputSignal() ? "MANUAL DATA PLACEHOLDER" : "No"
         ));
     }
 
