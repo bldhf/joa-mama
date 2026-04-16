@@ -113,31 +113,27 @@ public abstract class BlockStateTraits {
     }
 
     public static void getTheWholeThing(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        getMiscTraits(traits);
+        getFluidTraits(traits);
+        getPathfindingTraits(traits);
+        getMobGriefingTraits(traits);
+        getMobSpawningTraits(traits);
+        getIgnitionTraits(traits);
+        getConnectionTraits(traits);
+        getBasicCollisionTraits(traits);
+        getComplexCollisionTraits(traits);
+        getLootAndMiningTraits(traits);
+        getManualTraits(traits);
+        getBlockTagTraits(traits, BlockTags.class);
+    }
+
+    private static void getMiscTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
         traits.add(new BlockStateTrait<>(
                 "block_id",
                 "Block ID",
                 "",
                 "",
                 (state) -> state.toString().replaceAll("\\[.*", "")
-        ));
-        traits.add(new BlockStateTrait<>(
-                "blockstate",
-                "Blockstate",
-                "",
-                "",
-                BlockState::toString
-        ));
-        traits.add(new BlockStateTrait<>(
-                "translated_name",
-                "Translated Name",
-                "The translated name of the block, if it exists, i think.",
-                "",
-                (state) -> {
-                    Language language = Language.getInstance();
-                    var contents = (TranslatableContents) state.getBlock().getName().getContents();
-                    // imitates net.minecraft.network.chat.contents.TranslatableContents.decompose
-                    return contents.getFallback() != null ? language.getOrDefault(contents.getKey(), contents.getFallback()) : language.getOrDefault(contents.getKey());
-                }
         ));
         traits.add(new BlockStateTrait<>(
                 "translation_key",
@@ -147,17 +143,6 @@ public abstract class BlockStateTraits {
                 (state) -> state.getBlock().getName().toString()
         ));
         traits.add(new BlockStateTrait<>(
-                "hardness",
-                "Hardness",
-                "Determines how fast the block can be mined.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getDestroySpeed",
-                (state) -> {
-                    var hardness = state.getDestroySpeed(new MockBlockGetter(state), BlockPos.ZERO);
-                    if (hardness == -1) return "∞";
-                    return hardness;
-                }
-        ));
-        traits.add(new BlockStateTrait<>(
                 "blast_resistance",
                 "Blast Resistance",
                 "Determines how likely the block is to break from exposure to an explosion.",
@@ -165,11 +150,25 @@ public abstract class BlockStateTraits {
                 (state) -> Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance())
         ));
         traits.add(new BlockStateTrait<>(
-                "requires_correct_tool",
-                "Requires Correct Tool For Drops",
-                "Whether using the required tool is needed for this block to drop as an item.",
+                "conductive",
+                "Conductive",
+                "Whether or not a redstone component can be powered through this block.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isRedstoneConductor",
+                (state) -> state.isRedstoneConductor(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "suffocates_mobs",
+                "Suffocates Mobs",
+                "Whether a mob or player should suffocate in this block.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.isSuffocating",
+                (state) -> state.isSuffocating(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "blockstate",
+                "Blockstate",
                 "",
-                BlockBehaviour.BlockStateBase::requiresCorrectToolForDrops
+                "",
+                BlockState::toString
         ));
         traits.add(new BlockStateTrait<>(
                 "luminance",
@@ -184,6 +183,54 @@ public abstract class BlockStateTraits {
                 "Whether the block is visually opaque.",
                 "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#canOcclude",
                 BlockBehaviour.BlockStateBase::canOcclude
+        ));
+        traits.add(new BlockStateTrait<>(
+                "gets_random_ticked",
+                "Gets Random Ticked",
+                "Whether the block gets affected by random ticks.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isRandomlyTicking",
+                BlockBehaviour.BlockStateBase::isRandomlyTicking
+        ));
+        traits.add(new BlockStateTrait<>(
+                "opacity",
+                "Opacity",
+                "How much light the block dampens",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getLightDampening",
+                BlockBehaviour.BlockStateBase::getLightDampening
+        ));
+        traits.add(new BlockStateTrait<>(
+                "is_opaque_full_cube",
+                "Is Opaque Full Cube",
+                "Whether the block is opaque and renders as a full cube. Note that this is not an AND of Opaque and Full Cube,\nas this uses the rendering shape and Full Cube uses the collision shape.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isSolidRender",
+                BlockBehaviour.BlockStateBase::isSolidRender
+        ));
+        traits.add(new BlockStateTrait<>(
+                "blocks_beacon_beam",
+                "Blocks Beacon Beam",
+                "Whether placing this block above a beacon will prevent its beam from forming, or stop its current one.",
+                "",
+                // net/minecraft/block/entity/BeaconBlockEntity.java:150
+                (state) -> !(state.getLightDampening() < 15 || state.is(Blocks.BEDROCK))
+        ));
+        traits.add(new BlockStateTrait<>(
+                "supports_redstone_dust",
+                "Supports Redstone Dust",
+                "Whether redstone dust (\"wire\") can be placed on top of this block.",
+                "net.minecraft.world.level.block.RedStoneWireBlock#canSurviveOn",
+                (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "translated_name",
+                "Translated Name",
+                "The translated name of the block, if it exists, i think.",
+                "",
+                (state) -> {
+                    Language language = Language.getInstance();
+                    var contents = (TranslatableContents) state.getBlock().getName().getContents();
+                    // imitates net.minecraft.network.chat.contents.TranslatableContents.decompose
+                    return contents.getFallback() != null ? language.getOrDefault(contents.getKey(), contents.getFallback()) : language.getOrDefault(contents.getKey());
+                }
         ));
         traits.add(new BlockStateTrait<>(
                 "movable",
@@ -219,214 +266,6 @@ public abstract class BlockStateTraits {
                     case PUSH_ONLY, BLOCK, DESTROY -> "No";
                     case IGNORE -> null;
                 }
-        ));
-        traits.add(new BlockStateTrait<>(
-                "gets_random_ticked",
-                "Gets Random Ticked",
-                "Whether the block gets affected by random ticks.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isRandomlyTicking",
-                BlockBehaviour.BlockStateBase::isRandomlyTicking
-        ));
-        traits.add(new BlockStateTrait<>(
-                "flammable",
-                "Flammable",
-                "Whether the block can be destroyed by fire.",
-                "",
-                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnOdds(state) > 0
-        ));
-        traits.add(new BlockStateTrait<>(
-                "burn_odds",
-                "Burn Odds",
-                "The higher the burn odds, the quicker a block burns away (when on fire). 0 means it is non-flammable.",
-                "net.minecraft.world.level.block.FireBlock#getBurnOdds",
-                ((FireBlockAccessor) Blocks.FIRE)::invokeGetBurnOdds
-        ));
-        traits.add(new BlockStateTrait<>(
-                "ignite_odds",
-                "Ignite Odds",
-                "The higher the ignite odds, the more likely a block is to catch fire (if it is able to spread there).",
-                "net.minecraft.world.level.block.FireBlock#getIgniteOdds(net.minecraft.world.level.block.state.BlockState)",
-                ((FireBlockAccessor) Blocks.FIRE)::invokeGetIgniteOdds
-        ));
-        traits.add(new BlockStateTrait<>(
-                "conductive",
-                "Conductive",
-                "Whether or not a redstone component can be powered through this block.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isRedstoneConductor",
-                (state) -> state.isRedstoneConductor(new MockBlockGetter(state), BlockPos.ZERO)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "suffocates_mobs",
-                "Suffocates Mobs",
-                "Whether a mob or player should suffocate in this block.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.isSuffocating",
-                (state) -> state.isSuffocating(new MockBlockGetter(state), BlockPos.ZERO)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "opacity",
-                "Opacity",
-                "How much light the block dampens",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getLightDampening",
-                BlockBehaviour.BlockStateBase::getLightDampening
-        ));
-        traits.add(new BlockStateTrait<>(
-                "is_opaque_full_cube",
-                "Is Opaque Full Cube",
-                "Whether the block is opaque and renders as a full cube. Note that this is not an AND of Opaque and Full Cube,\nas this uses the rendering shape and Full Cube uses the collision shape.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isSolidRender",
-                BlockBehaviour.BlockStateBase::isSolidRender
-        ));
-        traits.add(new BlockStateTrait<>(
-                "bottom_face_has_full_square",
-                "Bottom Face Has Full Square",
-                "This is true if the bottom face is a full square.",
-                "net.minecraft.world.level.block.Block#isFaceFull",
-                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.DOWN)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "top_face_has_full_square",
-                "Top Face Has Full Square",
-                "This is true if the top face is a full square.",
-                "net.minecraft.world.level.block.Block#isFaceFull",
-                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "side_face_has_full_square",
-                "Side Face Has Full Square (North)",
-                "This is true if the north face has a full, square surface.",
-                "net.minecraft.world.level.block.Block#isFaceFull",
-                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.NORTH)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "top_face_has_rim",
-                "Top Face Has Rim",
-                "This is true if the top face contains a 2 pixel wide ring going around its edge",
-                "net.minecraft.world.level.block.Block#canSupportRigidBlock",
-                (state) -> Block.canSupportRigidBlock(new MockBlockGetter(state), BlockPos.ZERO)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "bottom_face_has_small_square",
-                "Bottom Face Has Small Square",
-                "This is true if the bottom face contains a square of length 2 at its center.",
-                "net.minecraft.world.level.block.Block#canSupportCenter",
-                (state) -> Block.canSupportCenter(new MockLevelReader(state), BlockPos.ZERO, Direction.DOWN)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "top_face_has_small_square",
-                "Top Face Has Small Square",
-                "This is true if the top face contains a square of length 2 at its center.",
-                "net.minecraft.world.level.block.Block#canSupportCenter",
-                (state) -> Block.canSupportCenter(new MockLevelReader(state), BlockPos.ZERO, Direction.UP)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "bottom_face_has_collision",
-                "Bottom Face Has Collision",
-                "This is true if the bottom side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
-                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.DOWN).isEmpty()
-        ));
-        traits.add(new BlockStateTrait<>(
-                "top_face_has_collision",
-                "Top Face Has Collision",
-                "This is true if the top side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
-                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.UP).isEmpty()
-        ));
-        traits.add(new BlockStateTrait<>(
-                "side_face_has_collision",
-                "Side Face Has Collision (North)",
-                "This is true if the north side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
-                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.NORTH).isEmpty()
-        ));
-        traits.add(new BlockStateTrait<>(
-                "has_collision",
-                "Has Collision",
-                "Whether the block has any solid collision box.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
-                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).isEmpty()
-        ));
-        traits.add(new BlockStateTrait<>(
-                "redirects_redstone",
-                "Redirects Redstone Wire (North)",
-                "This is true if the North side connects to/redirects adjacent redstone dust.",
-                "",
-                (state) -> RedStoneWireBlockAccessor.invokeShouldConnectTo(state, Direction.SOUTH)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "connects_to_panes",
-                "Connects To Panes (North)",
-                "Whether a glass pane block to the north will connect to this block.",
-                "",
-                (state) -> ((StainedGlassPaneBlock) Blocks.ORANGE_STAINED_GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockGetter(state), BlockPos.ZERO, Direction.NORTH))
-        ));
-        traits.add(new BlockStateTrait<>(
-                "blocks_beacon_beam",
-                "Blocks Beacon Beam",
-                "Whether placing this block above a beacon will prevent its beam from forming, or stop its current one.",
-                "",
-                // net/minecraft/block/entity/BeaconBlockEntity.java:150
-                (state) -> !(state.getLightDampening() < 15 || state.is(Blocks.BEDROCK))
-        ));
-        traits.add(new BlockStateTrait<>(
-                "full_cube",
-                "Full Cube",
-                "Whether the block has a normal cube shape and has full block collision on all sides.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isCollisionShapeFullBlock",
-                (state) -> state.isCollisionShapeFullBlock(new MockLevelReader(state), BlockPos.ZERO)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "waterloggable",
-                "Waterloggable",
-                "Whether this block can be waterlogged.",
-                "",
-                (state) -> (state.getBlock() instanceof SimpleWaterloggedBlock) ? true : (isWater(state) ? "Inherent" : false)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "supports_redstone_dust",
-                "Supports Redstone Dust",
-                "Whether redstone dust (\"wire\") can be placed on top of this block.",
-                "net.minecraft.world.level.block.RedStoneWireBlock#canSurviveOn",
-                (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "gets_flushed1",
-                "Gets Flushed1",
-                "Whether this block will get destroyed by flowing water or lava.",
-                "",
-                (state) -> ((FlowableFluidAccessor) Fluids.WATER).invokeCanMaybePassThrough(
-                        new MockLevelReader(state),
-                        BlockPos.ZERO,
-                        Blocks.WATER.defaultBlockState(),
-                        Direction.NORTH,
-                        BlockPos.ZERO.north(),
-                        state,
-                        state.getFluidState()
-                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "gets_flushed2",
-                "Gets Flushed2",
-                "Whether this block will get destroyed by flowing water or lava.",
-                "",
-                (state) -> FlowableFluidAccessor.invokeCanHoldSpecificFluid(
-                        new MockLevelReader(state),
-                        BlockPos.ZERO,
-                        Blocks.WATER.defaultBlockState(),
-                        Fluids.WATER
-                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "gets_flushed3",
-                "Gets Flushed3",
-                "Whether this block will get destroyed by flowing water or lava.",
-                "",
-                (state) -> Fluids.WATER.defaultFluidState().canBeReplacedWith(
-                        new MockLevelReader(state),
-                        BlockPos.ZERO,
-                        Fluids.WATER,
-                        Direction.NORTH
-                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
         ));
         traits.add(new BlockStateTrait<>(
                 "emits_power",
@@ -466,78 +305,6 @@ public abstract class BlockStateTraits {
                     }
                     return "No";
                 }
-        ));
-        traits.add(new BlockStateTrait<>(
-                "height_all",
-                "Height (All)",
-                "The block's upwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
-                "",
-                (state) -> state.getCollisionShape(
-                        new MockBlockGetter(state),
-                        BlockPos.ZERO,
-                        new MockCollisionContext(true, true, true, true, true)
-                ).toAabbs().stream().map(box -> box.maxY * 16).distinct().toArray()
-        ));
-        traits.add(new BlockStateTrait<>(
-                "width_all",
-                "Width (All)",
-                "The block's sideways-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
-                "",
-                (state) -> {
-                    JsonObject obj = new JsonObject();
-                    obj.add(
-                            "North",
-                            jsonArrayFromStream(
-                                    state.getCollisionShape(
-                                            new MockBlockGetter(state),
-                                            BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true, true)
-                                    ).toAabbs().stream().map(box -> (1 - box.minZ) * 16).distinct()
-                            )
-                    );
-                    obj.add(
-                            "South",
-                            jsonArrayFromStream(
-                                    state.getCollisionShape(
-                                            new MockBlockGetter(state),
-                                            BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true, true)
-                                    ).toAabbs().stream().map(box -> box.maxZ * 16).distinct()
-                            )
-                    );
-                    obj.add(
-                            "East",
-                            jsonArrayFromStream(
-                                    state.getCollisionShape(
-                                            new MockBlockGetter(state),
-                                            BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true, true)
-                                    ).toAabbs().stream().map(box -> (1 - box.minX) * 16).distinct()
-                            )
-                    );
-                    obj.add(
-                            "West",
-                            jsonArrayFromStream(
-                                    state.getCollisionShape(
-                                            new MockBlockGetter(state),
-                                            BlockPos.ZERO,
-                                            new MockCollisionContext(true, true, true, true, true)
-                                    ).toAabbs().stream().map(box -> box.maxX * 16).distinct()
-                            )
-                    );
-                    return obj;
-                }
-        ));
-        traits.add(new BlockStateTrait<>(
-                "collision_bottom_all",
-                "Collision Bottom (All)",
-                "The block's downwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
-                "",
-                (state) -> state.getCollisionShape(
-                        new MockBlockGetter(state),
-                        BlockPos.ZERO,
-                        new MockCollisionContext(true, true, true, true, true)
-                ).toAabbs().stream().map(box -> (1 - box.minY) * 16).distinct().toArray()
         ));
         traits.add(new BlockStateTrait<>(
                 "block_render_type",
@@ -612,13 +379,6 @@ public abstract class BlockStateTraits {
                 BlockBehaviour.BlockStateBase::liquid
         ));
         traits.add(new BlockStateTrait<>(
-                "ignited_by_lava",
-                "Ignited By Lava",
-                "Whether lava can set this block on fire.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#ignitedByLava",
-                BlockBehaviour.BlockStateBase::ignitedByLava
-        ));
-        traits.add(new BlockStateTrait<>(
                 "replaceable",
                 "Replaceable",
                 "Determines whether a block placed or falling on this block will replace it rather than being placed against or on it.",
@@ -638,63 +398,6 @@ public abstract class BlockStateTraits {
                 "Whether the block can fall when unsupported (as a falling_block entity).",
                 "",
                 (state) -> state.getBlock() instanceof Fallable || state.is(Blocks.SCAFFOLDING)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "water_forms_source_above",
-                "Water Forms Sources Above",
-                "Whether water can form a source above this block.\nIf infinite lava is on, it will form sources above the same blocks, but above lava and not above water.",
-                "",
-                (state) -> state.isSolid() || isWaterSource(state)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "spawnable",
-                "Spawnable On",
-                "Whether mobs can spawn on this block.",
-                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isValidSpawn",
-                (state) -> (
-                        state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.PLAYER) ? "Yes" :
-                        state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.OCELOT) ? "Ocelots and Parrots Only" :
-                        state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.POLAR_BEAR) ? "Polar Bear Only" :
-                        state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.BLAZE) ? "Fire-Immune Mobs Only" : "No"
-                )
-        ));
-        traits.add(new BlockStateTrait<>(
-                "iron_golem_spawnable_on",
-                "Iron Golem Spawnable On",
-                "Whether iron golems can spawn on this block.",
-                "",
-                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "dragon_immune",
-                "Dragon Immune",
-                "Whether this block is immune to The Ender Dragon flying through it.",
-                "",
-                (state) -> state.is(BlockTags.DRAGON_IMMUNE) || state.is(BlockTags.DRAGON_TRANSPARENT)
-        ));
-        traits.add(new BlockStateTrait<>(
-                "wither_block_break_immune",
-                "Wither Block Break Immune",
-                "Whether this block is immune to the wither's block breaking attack.",
-                "",
-                (state) -> state.is(BlockTags.WITHER_IMMUNE) || state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BUBBLE_COLUMN
-        ));
-        traits.add(new BlockStateTrait<>(
-                "wither_skull_immune",
-                "Wither Skull Immune",
-                "Whether this block is immune to the wither's skull attack.",
-                "",
-                (state) -> {
-                    float expRes = Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance());
-                    // net.minecraft.world.entity.projectile.WitherSkull.getBlockExplosionResistance
-                    if (1.3 < 0.3 * (0.3 + expRes)) {
-                        if (WitherBoss.canDestroy(state)) {
-                            return "Only to black skulls";
-                        }
-                        return "Yes";
-                    }
-                    return "No";
-                }
         ));
         assert Minecraft.getInstance().getSingleplayerServer() != null;
         StructureTemplateManager manager = Minecraft.getInstance().getSingleplayerServer().getStructureManager();
@@ -740,12 +443,134 @@ public abstract class BlockStateTraits {
                 "",
                 (state) -> !state.isAir() && !state.is(BlockTags.REPLACEABLE_BY_TREES)
         ));
+    }
+
+    private static void getFluidTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
         traits.add(new BlockStateTrait<>(
-                "connects_to_walls",
-                "Connects To Walls (North)",
-                "Whether a wall block to the north will connect to this block.",
+                "waterloggable",
+                "Waterloggable",
+                "Whether this block can be waterlogged.",
                 "",
-                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH)
+                (state) -> (state.getBlock() instanceof SimpleWaterloggedBlock) ? true : (isWater(state) ? "Inherent" : false)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "gets_flushed1",
+                "Gets Flushed1",
+                "Whether this block will get destroyed by flowing water or lava.",
+                "",
+                (state) -> ((FlowableFluidAccessor) Fluids.WATER).invokeCanMaybePassThrough(
+                        new MockLevelReader(state),
+                        BlockPos.ZERO,
+                        Blocks.WATER.defaultBlockState(),
+                        Direction.NORTH,
+                        BlockPos.ZERO.north(),
+                        state,
+                        state.getFluidState()
+                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "gets_flushed2",
+                "Gets Flushed2",
+                "Whether this block will get destroyed by flowing water or lava.",
+                "",
+                (state) -> FlowableFluidAccessor.invokeCanHoldSpecificFluid(
+                        new MockLevelReader(state),
+                        BlockPos.ZERO,
+                        Blocks.WATER.defaultBlockState(),
+                        Fluids.WATER
+                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "gets_flushed3",
+                "Gets Flushed3",
+                "Whether this block will get destroyed by flowing water or lava.",
+                "",
+                (state) -> Fluids.WATER.defaultFluidState().canBeReplacedWith(
+                        new MockLevelReader(state),
+                        BlockPos.ZERO,
+                        Fluids.WATER,
+                        Direction.NORTH
+                ) && !(state.getBlock() instanceof SimpleWaterloggedBlock)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "water_forms_source_above",
+                "Water Forms Sources Above",
+                "Whether water can form a source above this block.\nIf infinite lava is on, it will form sources above the same blocks, but above lava and not above water.",
+                "",
+                (state) -> state.isSolid() || isWaterSource(state)
+        ));
+    }
+
+    private static void getPathfindingTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_type",
+                "Pathfinding Type",
+                "",
+                "net.minecraft.world.level.pathfinder.WalkNodeEvaluator.getPathTypeFromState",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "pathfinding_penalty",
+                "Pathfinding Penalty",
+                "",
+                "net.minecraft.world.level.pathfinder.PathType.getMalus",
+                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
+        ));
+    }
+
+    private static void getMobGriefingTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "wither_skull_immune",
+                "Wither Skull Immune",
+                "Whether this block is immune to the wither's skull attack.",
+                "",
+                (state) -> {
+                    float expRes = Math.max(state.getBlock().getExplosionResistance(), state.getFluidState().getExplosionResistance());
+                    // net.minecraft.world.entity.projectile.WitherSkull.getBlockExplosionResistance
+                    if (1.3 < 0.3 * (0.3 + expRes)) {
+                        if (WitherBoss.canDestroy(state)) {
+                            return "Only to black skulls";
+                        }
+                        return "Yes";
+                    }
+                    return "No";
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "dragon_immune",
+                "Dragon Immune",
+                "Whether this block is immune to The Ender Dragon flying through it.",
+                "",
+                (state) -> state.is(BlockTags.DRAGON_IMMUNE) || state.is(BlockTags.DRAGON_TRANSPARENT)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "wither_block_break_immune",
+                "Wither Block Break Immune",
+                "Whether this block is immune to the wither's block breaking attack.",
+                "",
+                (state) -> state.is(BlockTags.WITHER_IMMUNE) || state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.BUBBLE_COLUMN
+        ));
+    }
+
+    private static void getMobSpawningTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "spawnable",
+                "Spawnable On",
+                "Whether mobs can spawn on this block.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isValidSpawn",
+                (state) -> (
+                        state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.PLAYER) ? "Yes" :
+                                state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.OCELOT) ? "Ocelots and Parrots Only" :
+                                state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.POLAR_BEAR) ? "Polar Bear Only" :
+                                state.isValidSpawn(new MockBlockGetter(state), BlockPos.ZERO, EntityType.BLAZE) ? "Fire-Immune Mobs Only" : "No"
+                )
+        ));
+        traits.add(new BlockStateTrait<>(
+                "iron_golem_spawnable_on",
+                "Iron Golem Spawnable On",
+                "Whether iron golems can spawn on this block.",
+                "",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
         ));
         traits.add(new BlockStateTrait<>(
                 "raid_spawnable",
@@ -763,19 +588,236 @@ public abstract class BlockStateTraits {
                                 EntityType.RAVAGER
                         ) || state.is(Blocks.SNOW)
         ));
+    }
+
+    private static void getIgnitionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
         traits.add(new BlockStateTrait<>(
-                "pathfinding_type",
-                "Pathfinding Type",
+                "flammable",
+                "Flammable",
+                "Whether the block can be destroyed by fire.",
                 "",
-                "net.minecraft.world.level.pathfinder.WalkNodeEvaluator.getPathTypeFromState",
-                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO)
+                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnOdds(state) > 0
         ));
         traits.add(new BlockStateTrait<>(
-                "pathfinding_penalty",
-                "Pathfinding Penalty",
+                "burn_odds",
+                "Burn Odds",
+                "The higher the burn odds, the quicker a block burns away (when on fire). 0 means it is non-flammable.",
+                "net.minecraft.world.level.block.FireBlock#getBurnOdds",
+                ((FireBlockAccessor) Blocks.FIRE)::invokeGetBurnOdds
+        ));
+        traits.add(new BlockStateTrait<>(
+                "ignite_odds",
+                "Ignite Odds",
+                "The higher the ignite odds, the more likely a block is to catch fire (if it is able to spread there).",
+                "net.minecraft.world.level.block.FireBlock#getIgniteOdds(net.minecraft.world.level.block.state.BlockState)",
+                ((FireBlockAccessor) Blocks.FIRE)::invokeGetIgniteOdds
+        ));
+        traits.add(new BlockStateTrait<>(
+                "ignited_by_lava",
+                "Ignited By Lava",
+                "Whether lava can set this block on fire.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#ignitedByLava",
+                BlockBehaviour.BlockStateBase::ignitedByLava
+        ));
+    }
+
+    private static void getConnectionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "redirects_redstone",
+                "Redirects Redstone Wire (North)",
+                "This is true if the North side connects to/redirects adjacent redstone dust.",
                 "",
-                "net.minecraft.world.level.pathfinder.PathType.getMalus",
-                (state) -> WalkNodeEvaluatorAccessor.invokeGetPathTypeFromState(new MockBlockGetter(state), BlockPos.ZERO).getMalus()
+                (state) -> RedStoneWireBlockAccessor.invokeShouldConnectTo(state, Direction.SOUTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_panes",
+                "Connects To Panes (North)",
+                "Whether a glass pane block to the north will connect to this block.",
+                "",
+                (state) -> ((StainedGlassPaneBlock) Blocks.ORANGE_STAINED_GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockGetter(state), BlockPos.ZERO, Direction.NORTH))
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls",
+                "Connects To Walls (North)",
+                "Whether a wall block to the north will connect to this block.",
+                "",
+                (state) -> ((WallBlockAccessor) Blocks.ANDESITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH)
+        ));
+    }
+
+    private static void getBasicCollisionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "full_cube",
+                "Full Cube",
+                "Whether the block has a normal cube shape and has full block collision on all sides.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#isCollisionShapeFullBlock",
+                (state) -> state.isCollisionShapeFullBlock(new MockLevelReader(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "bottom_face_has_full_square",
+                "Bottom Face Has Full Square",
+                "This is true if the bottom face is a full square.",
+                "net.minecraft.world.level.block.Block#isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.DOWN)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "top_face_has_full_square",
+                "Top Face Has Full Square",
+                "This is true if the top face is a full square.",
+                "net.minecraft.world.level.block.Block#isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "side_face_has_full_square",
+                "Side Face Has Full Square (North)",
+                "This is true if the north face has a full, square surface.",
+                "net.minecraft.world.level.block.Block#isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.NORTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "top_face_has_rim",
+                "Top Face Has Rim",
+                "This is true if the top face contains a 2 pixel wide ring going around its edge",
+                "net.minecraft.world.level.block.Block#canSupportRigidBlock",
+                (state) -> Block.canSupportRigidBlock(new MockBlockGetter(state), BlockPos.ZERO)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "bottom_face_has_small_square",
+                "Bottom Face Has Small Square",
+                "This is true if the bottom face contains a square of length 2 at its center.",
+                "net.minecraft.world.level.block.Block#canSupportCenter",
+                (state) -> Block.canSupportCenter(new MockLevelReader(state), BlockPos.ZERO, Direction.DOWN)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "top_face_has_small_square",
+                "Top Face Has Small Square",
+                "This is true if the top face contains a square of length 2 at its center.",
+                "net.minecraft.world.level.block.Block#canSupportCenter",
+                (state) -> Block.canSupportCenter(new MockLevelReader(state), BlockPos.ZERO, Direction.UP)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "bottom_face_has_collision",
+                "Bottom Face Has Collision",
+                "This is true if the bottom side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.DOWN).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "top_face_has_collision",
+                "Top Face Has Collision",
+                "This is true if the top side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.UP).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "side_face_has_collision",
+                "Side Face Has Collision (North)",
+                "This is true if the north side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.NORTH).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "has_collision",
+                "Has Collision",
+                "Whether the block has any solid collision box.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getCollisionShape(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos)",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).isEmpty()
+        ));
+    }
+
+    private static void getComplexCollisionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "height_all",
+                "Height (All)",
+                "The block's upwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
+                "",
+                (state) -> state.getCollisionShape(
+                        new MockBlockGetter(state),
+                        BlockPos.ZERO,
+                        new MockCollisionContext(true, true, true, true, true)
+                ).toAabbs().stream().map(box -> box.maxY * 16).distinct().toArray()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "width_all",
+                "Width (All)",
+                "The block's sideways-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
+                "",
+                (state) -> {
+                    JsonObject obj = new JsonObject();
+                    obj.add(
+                            "North",
+                            jsonArrayFromStream(
+                                    state.getCollisionShape(
+                                            new MockBlockGetter(state),
+                                            BlockPos.ZERO,
+                                            new MockCollisionContext(true, true, true, true, true)
+                                    ).toAabbs().stream().map(box -> (1 - box.minZ) * 16).distinct()
+                            )
+                    );
+                    obj.add(
+                            "South",
+                            jsonArrayFromStream(
+                                    state.getCollisionShape(
+                                            new MockBlockGetter(state),
+                                            BlockPos.ZERO,
+                                            new MockCollisionContext(true, true, true, true, true)
+                                    ).toAabbs().stream().map(box -> box.maxZ * 16).distinct()
+                            )
+                    );
+                    obj.add(
+                            "East",
+                            jsonArrayFromStream(
+                                    state.getCollisionShape(
+                                            new MockBlockGetter(state),
+                                            BlockPos.ZERO,
+                                            new MockCollisionContext(true, true, true, true, true)
+                                    ).toAabbs().stream().map(box -> (1 - box.minX) * 16).distinct()
+                            )
+                    );
+                    obj.add(
+                            "West",
+                            jsonArrayFromStream(
+                                    state.getCollisionShape(
+                                            new MockBlockGetter(state),
+                                            BlockPos.ZERO,
+                                            new MockCollisionContext(true, true, true, true, true)
+                                    ).toAabbs().stream().map(box -> box.maxX * 16).distinct()
+                            )
+                    );
+                    return obj;
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "collision_bottom_all",
+                "Collision Bottom (All)",
+                "The block's downwards-facing collision surfaces.\nIncludes internal collisions.\nDefaults to pixel values, this can be converted in the settings.",
+                "",
+                (state) -> state.getCollisionShape(
+                        new MockBlockGetter(state),
+                        BlockPos.ZERO,
+                        new MockCollisionContext(true, true, true, true, true)
+                ).toAabbs().stream().map(box -> (1 - box.minY) * 16).distinct().toArray()
+        ));
+    }
+
+    private static void getLootAndMiningTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
+        traits.add(new BlockStateTrait<>(
+                "hardness",
+                "Hardness",
+                "Determines how fast the block can be mined.",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#getDestroySpeed",
+                (state) -> {
+                    var hardness = state.getDestroySpeed(new MockBlockGetter(state), BlockPos.ZERO);
+                    if (hardness == -1) return "∞";
+                    return hardness;
+                }
+        ));
+        traits.add(new BlockStateTrait<>(
+                "requires_correct_tool",
+                "Requires Correct Tool For Drops",
+                "Whether using the required tool is needed for this block to drop as an item.",
+                "",
+                BlockBehaviour.BlockStateBase::requiresCorrectToolForDrops
         ));
         traits.add(new BlockStateTrait<>(
                 "requires_silk_touch",
@@ -900,6 +942,9 @@ public abstract class BlockStateTraits {
                     return names;
                 }
         ));
+    }
+
+    private static void getManualTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
         traits.add(new BlockStateTrait<>(
                 "xp_dropped_when_mined",
                 "XP Dropped When Mined",
@@ -921,7 +966,11 @@ public abstract class BlockStateTraits {
                 "Sends Comparator Updates",
                 "Whether interactions with this block sends updates to comparators up to 2 blocks away (manhattan distance).",
                 "",
-                (_) -> "MANUAL DATA PLACEHOLDER"
+                (state) -> {
+                    if (state.getBlock().getClass() == Block.class)
+                        return "No";
+                    else return "MANUAL DATA PLACEHOLDER";
+                }
                 // The only way I see this one being possible is by checking if the classes of the block or block
                 // entity, or their superclasses, excluding the base BlockEntity class, are capable of calling
                 // setChanged or updateNeighbourForOutputSignal. I have no idea how that could be done, though. - bldhf
@@ -972,7 +1021,7 @@ public abstract class BlockStateTraits {
         ));
     }
 
-    public static <T> void addBlockTagProperties(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits, Class<T> clazz) {
+    public static <T> void getBlockTagTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits, Class<T> clazz) {
         for (Field staticField : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(staticField.getModifiers())) {
                 try {

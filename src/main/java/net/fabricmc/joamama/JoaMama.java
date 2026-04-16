@@ -24,7 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.stats.StatsCounter;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
@@ -113,7 +112,6 @@ public class JoaMama implements ModInitializer {
 		if (!CALLED_ON_RELOAD_RESOURCES) {
 			BlockStateTraits.load(blockStateTraits, level, client);
 			BlockStateTraits.getTheWholeThing(blockStateTraits);
-			BlockStateTraits.addBlockTagProperties(blockStateTraits, BlockTags.class);
 
 			EntityStateManager.load(level);
 			EntityState.load(server, level, client, clientLevel, connection, stats, recipeBook);
