@@ -30,6 +30,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -41,8 +42,10 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.entity.vault.VaultBlockEntity;
 import net.minecraft.world.level.block.piston.*;
 import net.minecraft.world.level.block.state.*;
+import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.material.*;
@@ -964,14 +967,28 @@ public abstract class BlockStateTraits {
         traits.add(new BlockStateTrait<>(
                 "sends_comparator_updates",
                 "Sends Comparator Updates",
-                "Whether interactions with this block sends updates to comparators up to 2 blocks away (manhattan distance).",
+                "Whether interactions with this block send updates to comparators up to 2 blocks away.",
                 "",
                 (state) -> {
-                    if (state.getBlock().getClass() == Block.class)
-                        return "No";
-                    else return "MANUAL DATA PLACEHOLDER";
+                    if (state.getBlock() instanceof EntityBlock entityBlock) {
+                        BlockEntity blockEntity = entityBlock.newBlockEntity(BlockPos.ZERO, state);
+                        return (blockEntity instanceof BeehiveBlockEntity ||
+                                blockEntity instanceof BrushableBlockEntity ||
+                                blockEntity instanceof Clearable || // This accounts for all item containers.
+                                blockEntity instanceof CommandBlockEntity ||
+                                blockEntity instanceof CopperGolemStatueBlockEntity ||
+                                blockEntity instanceof CreakingHeartBlockEntity ||
+                                blockEntity instanceof JigsawBlockEntity ||
+                                blockEntity instanceof VibrationSystem || // This accounts for all vibration users.
+                                blockEntity instanceof SignBlockEntity ||
+                                blockEntity instanceof Spawner || // This accounts for both types of spawners.
+                                blockEntity instanceof StructureBlockEntity ||
+                                blockEntity instanceof TestInstanceBlockEntity ||
+                                blockEntity instanceof TheEndGatewayBlockEntity ||
+                                blockEntity instanceof VaultBlockEntity) ? "Yes" : "Placement Only";
+                    } else return (state.hasAnalogOutputSignal()) ? "Yes" : "No";
                 }
-                // The only way I see this one being possible is by checking if the classes of the block or block
+                // The only way I see this one being automatable is by checking if the classes of the block or block
                 // entity, or their superclasses, excluding the base BlockEntity class, are capable of calling
                 // setChanged or updateNeighbourForOutputSignal. I have no idea how that could be done, though. - bldhf
         ));
