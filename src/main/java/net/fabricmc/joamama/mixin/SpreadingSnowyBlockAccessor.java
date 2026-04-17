@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(SpreadingSnowyBlock.class)
-public interface SpreadableBlockAccessor {
+public interface SpreadingSnowyBlockAccessor {
     @Invoker
     static boolean invokeCanStayAlive(BlockState state, LevelReader world, BlockPos pos) {
         return false;
