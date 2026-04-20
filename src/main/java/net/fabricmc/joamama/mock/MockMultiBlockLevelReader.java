@@ -13,6 +13,7 @@ import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
@@ -103,11 +104,11 @@ public record MockMultiBlockLevelReader (Map<BlockPos, BlockState> blockStateMap
     }
 
     public BlockState getBlockState (BlockPos pos) {
-        return this.blockStateMap.get(pos);
+        return this.blockStateMap.getOrDefault(pos, Blocks.AIR.defaultBlockState());
     }
 
     public FluidState getFluidState (BlockPos pos) {
-        return this.blockStateMap.get(pos).getFluidState();
+        return this.blockStateMap.getOrDefault(pos, Blocks.AIR.defaultBlockState()).getFluidState();
     }
 
     public EnvironmentAttributeReader environmentAttributes() { throw new AssertionError(); }

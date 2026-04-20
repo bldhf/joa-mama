@@ -25,7 +25,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantInt;
@@ -45,6 +44,7 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.entity.vault.VaultBlockEntity;
 import net.minecraft.world.level.block.piston.*;
 import net.minecraft.world.level.block.state.*;
+import net.minecraft.world.level.block.state.properties.WallSide;
 import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
@@ -113,6 +113,22 @@ public abstract class BlockStateTraits {
     public static boolean isWaterSource(BlockState state) {
         FluidState fluidState = state.getFluidState();
         return (fluidState.is(Fluids.FLOWING_WATER) || fluidState.is(Fluids.WATER)) && fluidState.getAmount() == 8;
+    }
+
+    public static BlockState updateOtherBlock(BlockState state, BlockState otherState, Direction direction) {
+        return ((BlockBehaviourAccessor) otherState.getBlock()).invokeUpdateShape(
+                otherState,
+                new MockMultiBlockLevelReader(Map.of(
+                        BlockPos.ZERO, state,
+                        BlockPos.ZERO.relative(direction), otherState
+                )),
+                level,
+                BlockPos.ZERO.relative(direction),
+                direction.getOpposite(),
+                BlockPos.ZERO,
+                state,
+                null
+        );
     }
 
     public static void getTheWholeThing(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
@@ -187,7 +203,11 @@ public abstract class BlockStateTraits {
                 "Supports Redstone Dust",
                 "Whether redstone dust (\"wire\") can be placed on top of this block.",
                 "net.minecraft.world.level.block.RedStoneWireBlock.canSurviveOn",
-                (state) -> ((RedStoneWireBlockAccessor) Blocks.REDSTONE_WIRE).invokeCanSurviveOn(new MockLevelReader(state), BlockPos.ZERO, state)
+                (state) -> !updateOtherBlock(
+                        state,
+                        Blocks.REDSTONE_WIRE.defaultBlockState(),
+                        Direction.UP
+                ).isAir()
         ));
         traits.add(new BlockStateTrait<>(
                 "translated_name",
@@ -227,14 +247,14 @@ public abstract class BlockStateTraits {
                 "Block Entity",
                 "Whether this block has an associated block entity, and whether it's ticking or non-ticking.",
                 "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.hasBlockEntity\nnet.minecraft.world.level.block.EntityBlock.getTicker",
-                state -> {
+                (state) -> {
                     if (state.hasBlockEntity()) {
                         try {
                             return state.getBlock().getClass().getMethod("getTicker", Level.class, BlockState.class, BlockEntityType.class).getDeclaringClass() != EntityBlock.class
                                     ? "Ticking"
                                     : "Non-Ticking";
                         } catch (NoSuchMethodException e) {
-                            return "Goofy one <- this made me laugh, thanks Joa";
+                            return "Goofy one <- this made me laugh, thanks Joa <- this made me laugh, thanks past me";
                         }
                     }
                     return "No";
@@ -354,14 +374,22 @@ public abstract class BlockStateTraits {
                 "Generates in Structures",
                 "Based off of what blocks show up in the standard structure palletes. Does not include all complex structures.",
                 "",
-                state -> blocksInStructures.contains(state.getBlock())
+                (state) -> blocksInStructures.contains(state.getBlock())
         ));
         traits.add(new BlockStateTrait<>(
                 "obstructs_cactus",
                 "Obstructs Cactus",
                 "Whether placing this block next to cactus destroys it.",
-                "",
-                state -> state.isSolid() || state.getFluidState().is(FluidTags.LAVA)
+                "net.minecraft.world.level.block.CactusBlock.canSurvive",
+                (state) -> ((CactusBlockAccessor) Blocks.CACTUS).invokeCanSurvive(
+                        Blocks.CACTUS.defaultBlockState(),
+                        new MockMultiBlockLevelReader(Map.of(
+                                BlockPos.ZERO, Blocks.CACTUS.defaultBlockState(),
+                                BlockPos.ZERO.below(), Blocks.CACTUS.defaultBlockState(),
+                                BlockPos.ZERO.north(), state
+                        )),
+                        BlockPos.ZERO
+                )
         ));
         traits.add(new BlockStateTrait<>(
                 "obstructs_tree_growth",
@@ -423,14 +451,14 @@ public abstract class BlockStateTraits {
                 "Movable",
                 "Whether the block can be pushed by a piston, stops the piston from extending, or whether attempting to push it destroys the block.",
                 "net.minecraft.world.level.block.piston.PistonBaseBlock.isPushable",
-                state -> state.isAir() ? "Not Applicable" : PistonBaseBlock.isPushable(state, level, BlockPos.ZERO, Direction.NORTH, false, Direction.NORTH) ? "Yes" : PistonBaseBlock.isPushable(state, level, BlockPos.ZERO, Direction.NORTH, true, Direction.NORTH) ? "Breaks" : "No"
+                (state) -> state.isAir() ? "Not Applicable" : PistonBaseBlock.isPushable(state, level, BlockPos.ZERO, Direction.NORTH, false, Direction.NORTH) ? "Yes" : PistonBaseBlock.isPushable(state, level, BlockPos.ZERO, Direction.NORTH, true, Direction.NORTH) ? "Breaks" : "No"
         ));
         traits.add(new BlockStateTrait<>(
                 "sticky",
                 "Sticky",
                 "Whether the block can be pulled by a sticky piston or an adjacent slime/honey block.\nSlime and honey are listed as 'partially' as they are not sticky when pulled by one another.",
                 "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.getPistonPushReaction",
-                state -> {
+                (state) -> {
                     Block block = state.getBlock();
                     if (block instanceof SlimeBlock || block instanceof HoneyBlock)
                         return "Partially";
@@ -449,7 +477,7 @@ public abstract class BlockStateTraits {
                 "Waterloggable",
                 "Whether this block can be waterlogged.",
                 "",
-                (state) -> (state.getBlock() instanceof SimpleWaterloggedBlock) ? true : (isWater(state) ? "Inherent" : false)
+                (state) -> (state.getBlock() instanceof SimpleWaterloggedBlock) ? true : isWater(state) ? "Inherent" : false
         ));
         traits.add(new BlockStateTrait<>(
                 "gets_flushed1",
@@ -594,7 +622,7 @@ public abstract class BlockStateTraits {
                 "Flammable",
                 "Whether the block can be destroyed by fire.",
                 "",
-                state -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnOdds(state) > 0
+                (state) -> ((FireBlockAccessor) Blocks.FIRE).invokeGetBurnOdds(state) > 0
         ));
         traits.add(new BlockStateTrait<>(
                 "burn_odds",
@@ -620,32 +648,167 @@ public abstract class BlockStateTraits {
     }
 
     private static void getConnectionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
-        // TODO | 16/04/26 | should these really be north only, or would it make more sense to check all directions?
         traits.add(new BlockStateTrait<>(
-                "redirects_redstone",
+                "redirects_redstone_north",
                 "Redirects Redstone Wire (North)",
-                "This is true if the North side connects to/redirects adjacent redstone dust.",
-                "net.minecraft.world.level.block.RedStoneWireBlock.shouldConnectTo",
-                (state) -> RedStoneWireBlockAccessor.invokeShouldConnectTo(state, Direction.SOUTH)
+                "This is true if the north side connects to/redirects adjacent redstone dust.",
+                "net.minecraft.world.level.block.RedStoneWireBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.REDSTONE_WIRE.defaultBlockState(),
+                        Direction.NORTH
+                ).getValue(RedStoneWireBlock.SOUTH).isConnected()
         ));
         traits.add(new BlockStateTrait<>(
-                "connects_to_panes",
+                "redirects_redstone_south",
+                "Redirects Redstone Wire (South)",
+                "This is true if the south side connects to/redirects adjacent redstone dust.",
+                "net.minecraft.world.level.block.RedStoneWireBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.REDSTONE_WIRE.defaultBlockState(),
+                        Direction.SOUTH
+                ).getValue(RedStoneWireBlock.NORTH).isConnected()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "redirects_redstone_west",
+                "Redirects Redstone Wire (West)",
+                "This is true if the west side connects to/redirects adjacent redstone dust.",
+                "net.minecraft.world.level.block.RedStoneWireBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.REDSTONE_WIRE.defaultBlockState(),
+                        Direction.WEST
+                ).getValue(RedStoneWireBlock.EAST).isConnected()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "redirects_redstone_east",
+                "Redirects Redstone Wire (East)",
+                "This is true if the east side connects to/redirects adjacent redstone dust.",
+                "net.minecraft.world.level.block.RedStoneWireBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.REDSTONE_WIRE.defaultBlockState(),
+                        Direction.EAST
+                ).getValue(RedStoneWireBlock.WEST).isConnected()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_panes_north",
                 "Connects To Panes (North)",
-                "Whether a glass pane block to the north will connect to this block.",
-                "net.minecraft.world.level.block.IronBarsBlock.attachsTo",
-                (state) -> ((StainedGlassPaneBlock) Blocks.CYAN_STAINED_GLASS_PANE).attachsTo(state, state.isFaceSturdy(new MockBlockGetter(state), BlockPos.ZERO, Direction.NORTH))
+                "Whether a pane block to the north will connect to this block.",
+                "net.minecraft.world.level.block.IronBarsBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.IRON_BARS.defaultBlockState(),
+                        Direction.NORTH
+                ).getValue(PipeBlock.SOUTH)
         ));
         traits.add(new BlockStateTrait<>(
-                "connects_to_walls",
+                "connects_to_panes_south",
+                "Connects To Panes (South)",
+                "Whether a pane block to the south will connect to this block.",
+                "net.minecraft.world.level.block.IronBarsBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.IRON_BARS.defaultBlockState(),
+                        Direction.SOUTH
+                ).getValue(PipeBlock.NORTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_panes_west",
+                "Connects To Panes (West)",
+                "Whether a pane block to the west will connect to this block.",
+                "net.minecraft.world.level.block.IronBarsBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.IRON_BARS.defaultBlockState(),
+                        Direction.WEST
+                ).getValue(PipeBlock.EAST)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_panes_east",
+                "Connects To Panes (East)",
+                "Whether a pane block to the east will connect to this block.",
+                "net.minecraft.world.level.block.IronBarsBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.IRON_BARS.defaultBlockState(),
+                        Direction.EAST
+                ).getValue(PipeBlock.WEST)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_down_z",
+                "Raises Wall Posts (North-South)",
+                "Whether a wall block with connections to the north and south below this will be forced to have a center post.",
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState()
+                                .setValue(WallBlock.NORTH, WallSide.LOW)
+                                .setValue(WallBlock.SOUTH, WallSide.LOW),
+                        Direction.DOWN
+                ).getValue(WallBlock.UP)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_down_x",
+                "Raises Wall Posts (West-East)",
+                "Whether a wall block with connections to the west and east below this will be forced to have a center post.",
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState()
+                                .setValue(WallBlock.WEST, WallSide.LOW)
+                                .setValue(WallBlock.EAST, WallSide.LOW),
+                        Direction.DOWN
+                ).getValue(WallBlock.UP)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_north",
                 "Connects To Walls (North)",
                 "Whether a wall block to the north will connect to this block.",
-                "net.minecraft.world.level.block.WallBlock.connectsTo",
-                (state) -> ((WallBlockAccessor) Blocks.DIORITE_WALL).invokeConnectsTo(state, state.isFaceSturdy(new MockLevelReader(state), BlockPos.ZERO, Direction.NORTH), Direction.NORTH)
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState(),
+                        Direction.NORTH
+                ).getValue(WallBlock.SOUTH) != WallSide.NONE
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_south",
+                "Connects To Walls (South)",
+                "Whether a wall block to the south will connect to this block.",
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState(),
+                        Direction.SOUTH
+                ).getValue(WallBlock.NORTH) != WallSide.NONE
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_west",
+                "Connects To Walls (West)",
+                "Whether a wall block to the west will connect to this block.",
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState(),
+                        Direction.WEST
+                ).getValue(WallBlock.EAST) != WallSide.NONE
+        ));
+        traits.add(new BlockStateTrait<>(
+                "connects_to_walls_east",
+                "Connects To Walls (East)",
+                "Whether a wall block to the esat will connect to this block.",
+                "net.minecraft.world.level.block.WallBlock.updateShape",
+                (state) -> updateOtherBlock(
+                        state,
+                        Blocks.TUFF_WALL.defaultBlockState(),
+                        Direction.EAST
+                ).getValue(WallBlock.WEST) != WallSide.NONE
         ));
     }
 
     private static void getBasicCollisionTraits(TraitCollection<BlockStateTrait<?>, SetMultimap<Block, BlockState>> traits) {
-        // TODO | 16/04/26 | should these really be north only, or would it make more sense to check all directions?
         traits.add(new BlockStateTrait<>(
                 "full_cube",
                 "Full Cube",
@@ -668,11 +831,32 @@ public abstract class BlockStateTraits {
                 (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.UP)
         ));
         traits.add(new BlockStateTrait<>(
-                "side_face_has_full_square",
-                "Side Face Has Full Square (North)",
-                "This is true if the north face has a full, square surface.",
+                "north_face_has_full_square",
+                "North Face Has Full Square",
+                "This is true if the north face is a full square.",
                 "net.minecraft.world.level.block.Block.isFaceFull",
                 (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.NORTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "south_face_has_full_square",
+                "South Face Has Full Square",
+                "This is true if the south face is a full square.",
+                "net.minecraft.world.level.block.Block.isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.SOUTH)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "west_face_has_full_square",
+                "West Face Has Full Square",
+                "This is true if the west face is a full square.",
+                "net.minecraft.world.level.block.Block.isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.WEST)
+        ));
+        traits.add(new BlockStateTrait<>(
+                "east_face_has_full_square",
+                "East Face Has Full Square",
+                "This is true if the east face is a full square.",
+                "net.minecraft.world.level.block.Block.isFaceFull",
+                (state) -> Block.isFaceFull(state.getCollisionShape(new MockBlockGetter(state), BlockPos.ZERO), Direction.EAST)
         ));
         traits.add(new BlockStateTrait<>(
                 "top_face_has_rim",
@@ -710,11 +894,32 @@ public abstract class BlockStateTraits {
                 (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.UP).isEmpty()
         ));
         traits.add(new BlockStateTrait<>(
-                "side_face_has_collision",
-                "Side Face Has Collision (North)",
+                "north_face_has_collision",
+                "North Face Has Collision",
                 "This is true if the north side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
                 "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.getCollisionShape",
                 (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.NORTH).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "south_face_has_collision",
+                "South Face Has Collision",
+                "This is true if the south side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.getCollisionShape",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.SOUTH).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "west_face_has_collision",
+                "West Face Has Collision",
+                "This is true if the west side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.getCollisionShape",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.WEST).isEmpty()
+        ));
+        traits.add(new BlockStateTrait<>(
+                "east_face_has_collision",
+                "East Face Has Collision",
+                "This is true if the east side has collision at the outer face (meaning it has a hard hitbox that aligns with the block grid).",
+                "net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.getCollisionShape",
+                (state) -> !state.getCollisionShape(new MockLevelReader(state), BlockPos.ZERO).getFaceShape(Direction.EAST).isEmpty()
         ));
         traits.add(new BlockStateTrait<>(
                 "has_collision",
